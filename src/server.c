@@ -121,7 +121,7 @@ int main() {
     bzero((char*) &serv_addr,sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(portno);
-    serv_addr.sin_addr.s_addr = inet_addr("128.179.185.112");
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
 
     // bin the server's address and port to the socket
     if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
