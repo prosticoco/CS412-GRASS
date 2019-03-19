@@ -78,7 +78,7 @@ bool chat(int sock, char* buffer) {
     n = read(sock,buffer,255);
     if (n < 0) 
          error("ERROR reading from socket");
-    printf("%s\n",buffer);
+    printf("\nServer response : %s",buffer);
 }
 
 /*
