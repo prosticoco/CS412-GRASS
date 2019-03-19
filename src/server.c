@@ -6,12 +6,32 @@
 #include <netinet/in.h>
 
 #define BUFFER_MAX_SIZE 256
+#define NUM_COMMANDS 10
 
 static struct User **userlist;
 static int numUsers;
 static struct Command **cmdlist;
 static int numCmds;
 char port[7] = "31337";
+
+
+
+
+void init_command_list(){
+
+}
+
+
+
+void clean(){
+    
+}
+
+
+
+
+
+
 
 // Helper function to run commands in unix.
 void run_command(const char* command, int sock){
@@ -39,6 +59,7 @@ void recv_file(int fp, int sock, int size) {
 
 // Server side REPL given a socket file descriptor
 void *connection_handler(void* sockfd) {
+
 }
 
 /*
@@ -147,9 +168,5 @@ int main() {
     close(sockfd);
 
     return 0;
-
-
-
-
 
 }

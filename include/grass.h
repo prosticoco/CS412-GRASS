@@ -16,18 +16,30 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 
-struct User {
+typedef struct {
     const char* uname;
     const char* pass;
 
     bool isLoggedIn;
-};
+}user_t;
 
-struct Command {
+
+
+typedef struct {
     const char* cname;
     const char* cmd;
     const char* params;
-};
+    bool authent;
+}command_t;
+
+typedef struct {
+    size_t num_commands;
+    command_t* commands;
+}command_list_t;
+
+typedef struct {
+
+}user_list_t;
 
 void hijack_flow();
 
