@@ -19,7 +19,6 @@
 typedef struct {
     const char* uname;
     const char* pass;
-
     bool isLoggedIn;
 }user_t;
 
