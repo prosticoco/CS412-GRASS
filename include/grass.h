@@ -3,6 +3,7 @@
 
 #define DEBUG true
 
+#include <string>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -15,10 +16,11 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <vector>
 
 typedef struct {
-    const char* uname;
-    const char* pass;
+    const std::string uname;
+    const std::string pass;
     bool isLoggedIn;
 }user_t;
 
@@ -40,9 +42,12 @@ typedef struct {
 
 }user_list_t;
 
+
 typedef struct{
     int main_socket;
     int main_portno;
+    std::string base_dir;
+    std::vector<user_t> users;
 }data_t;
 
 void hijack_flow();

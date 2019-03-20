@@ -2,26 +2,17 @@ SRCDIR   = src
 BINDIR   = bin
 INCLUDES = include
 
-CCC=g++
-CC=gcc
+CC=g++
 CFLAGS=-Wall -Wextra -g -fno-stack-protector -z execstack -lpthread -std=gnu11 -I $(INCLUDES)/ -m32
 DEPS = $(wildcard $(INCLUDES)/%.h)
 
-all: $(BINDIR)/clientcpp $(BINDIR)/client $(BINDIR)/server $(BINDIR)/servercpp $(DEPS)
+all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
 
-$(BINDIR)/clientcpp: $(SRCDIR)/client.cpp
-	$(CCC) $(CFLAGS) $< -o $@
-
-$(BINDIR)/client: $(SRCDIR)/client.c
+$(BINDIR)/client: $(SRCDIR)/client.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BINDIR)/server: $(SRCDIR)/server.c
+$(BINDIR)/server: $(SRCDIR)/server.cpp
 	$(CC) $(CFLAGS) $< -o $@
-
-$(BINDIR)/servercpp: $(SRCDIR)/server.cpp
-	$(CCC) $(CFLAGS) $< -o $@
-
-
 
 .PHONY: clean
 clean:
