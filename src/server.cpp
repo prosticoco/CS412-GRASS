@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "error.h"
 
 #define BUFFER_MAX_SIZE 256
 #define NUM_COMMANDS 10
@@ -12,14 +13,72 @@ static struct User **userlist;
 static int numUsers;
 static struct Command **cmdlist;
 static int numCmds;
+static data_t* prog_data;
 char port[7] = "31337";
 
 
+/**
+ * @brief Initialize the main socket which will accept new connections
+ * 
+ * @param data pointer to the program data
+ */
+int init_server(data_t * data){
+    int sockfd = -1;
+    int portno = data->main_portno;   
+    struct sockaddr_in serv_addr;
+    // open the server's socket
+    sockfd = socket(AF_INET,SOCK_STREAM,0);
+    if(sockfd < 0){
+        error("ERROR opening socket \n");
+    }
+    data->main_socket = sockfd;
+    // initialize the server's address sructure
+    bzero((char*) &serv_addr,sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    // bin the server's address and port to the socket
+    if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
+        error("ERROR on binding\n");
+        return -1;
+    }
+    // A CHANGER
+    // listen to 5 maximum connexions
+    if(listen(sockfd,5) != 0){
+        error("ERROR listening failed\n");
+        return -1;
+    }  
+}
 
+/**
+ * @brief Listens to the main socket for new TCP connections and then calls connection handler
+ * 
+ * @param data pointer the program's data
+ */
+void accept_connections(data_t* data){
+        // Listen to the port and handle each connection
+    while(1){
+        struct sockaddr_in cli_addr;
+        socklen_t clilen;
+        clilen = sizeof(cli_addr);
+        int new_sockfd;
+        new_sockfd = accept(prog_data->main_socket,(struct sockaddr *) &cli_addr,&clilen);
+        if(new_sockfd < 0){
+            error("ERROR on accept\n");
+        }
+        // Create a Thread or Child to callback connection handler
+    }
+}
+
+
+void close_connections(data_t* data){
+    close(data->main_socket);
+}
 
 void init_command_list(){
 
 }
+
 
 
 
@@ -74,7 +133,7 @@ void search(char *pattern) {
 }
 
 // Parse the grass.conf file and fill in the global variables
-void parse_grass() {
+void parse_grass(data_t * data) {
 }
 
 /**
@@ -119,53 +178,23 @@ void test_function(int sockfd){
 }
 
 int main() {
-
+    int err;
     // TODO:
     // Parse the grass.conf file
-    parse_grass();
-    // Listen to the port and handle each connection
+    parse_grass(prog_data);
+
+    err = init_server(prog_data);
+    if(err < 0){
+        error("Error initializing server \n");
+    }
+
+    accept_connections(prog_data);
+
 
     // initial variables for connection information (TO BE CHANGED)
-    int sockfd,newsockfd;
-    int portno = 31337;
-    socklen_t clilen;
-    int n;
-    char buffer[BUFFER_MAX_SIZE];
-    struct sockaddr_in serv_addr, cli_addr;
-    // open the server's socket
-    sockfd = socket(AF_INET,SOCK_STREAM,0);
-    if(sockfd < 0){
-        error("ERROR opening socket \n");
-    }
-
-    // initialize the server's address sructure
-    bzero((char*) &serv_addr,sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(portno);
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-
-    // bin the server's address and port to the socket
-    if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
-        error("ERROR on binding\n");
-    }
-
-    // listen to 5 maximum connexions
-    if(listen(sockfd,5) != 0){
-        error("ERROR listening failed\n");
-    }
-
-    printf("Waiting to connect to a client \n");
-
-    clilen = sizeof(cli_addr);
-    newsockfd = accept(sockfd,(struct sockaddr *) &cli_addr,&clilen);
-    if(newsockfd < 0){
-        error("ERROR on accept\n");
-    }
-    printf("Accepted connection \n");
-
-    test_function(newsockfd);
-
-    close(sockfd);
+     
+    clean();
+    
 
     return 0;
 

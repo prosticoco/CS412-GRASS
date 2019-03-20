@@ -18,7 +18,7 @@ char port[7] = "31337";
 
 
 void init_command_list(){
-    
+
 }
 
 
@@ -35,6 +35,7 @@ void clean(){
 
 // Helper function to run commands in unix.
 void run_command(const char* command, int sock){
+    
 }
 
 

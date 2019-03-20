@@ -40,6 +40,11 @@ typedef struct {
 
 }user_list_t;
 
+typedef struct{
+    int main_socket;
+    int main_portno;
+}data_t;
+
 void hijack_flow();
 
 #endif
