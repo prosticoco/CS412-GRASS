@@ -4,6 +4,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <iterator>
+#include <iostream>
 #include "error.h"
 
 #define BUFFER_MAX_SIZE 256
@@ -16,6 +21,17 @@ static int numCmds;
 static data_t* prog_data;
 char port[7] = "31337";
 
+using namespace std;
+
+/**
+ * @brief Default error function
+ * 
+ * @param msg error msg to be displayed
+ */
+void error(char* msg){
+    perror(msg);
+    exit(1);
+}
 
 /**
  * @brief Initialize the main socket which will accept new connections
@@ -134,16 +150,44 @@ void search(char *pattern) {
 
 // Parse the grass.conf file and fill in the global variables
 void parse_grass(data_t * data) {
-}
 
-/**
- * @brief Default error function
- * 
- * @param msg error msg to be displayed
- */
-void error(char* msg){
-    perror(msg);
-    exit(1);
+
+    ifstream infile("../src/grass.conf");
+    
+    if(!infile.is_open()) {
+        cout << "Error reading from config" << endl;
+    }
+    string line;
+
+    //skip first 4 lines
+    for(int i= 0; i <= 3; i++) {
+        getline(infile, line);
+    }
+    // get base directory
+    getline(infile, line);
+    istringstream iss(line);
+    vector<string> base_words((istream_iterator<string>(iss)),istream_iterator<string>());
+    data->base_dir = base_words[1];
+    base_words.clear();
+    //skip next 2 lines
+    getline(infile,line);
+    getline(infile, line);
+    // get port number
+    getline(infile, line);
+    istringstream portiss(line);
+    vector<string> port_words((istream_iterator<string>(portiss)),istream_iterator<string>());
+    data->main_portno = atoi(port_words[1].c_str());
+    //skip 2 lines
+    getline(infile, line);
+    getline(infile, line);
+    //get users information
+    istringstream currss;
+    while(getline(infile, line) ){
+        currss = istringstream(line);
+        vector<string> user_words((istream_iterator<string>(currss)),istream_iterator<string>());
+        user_t u({user_words[1],user_words[2], false});
+        data->users.push_back(u);
+    }
 }
 
 
@@ -178,24 +222,32 @@ void test_function(int sockfd){
 }
 
 int main() {
-    int err;
-    // TODO:
-    // Parse the grass.conf file
-    parse_grass(prog_data);
 
-    err = init_server(prog_data);
-    if(err < 0){
-        error("Error initializing server \n");
-    }
-
-    accept_connections(prog_data);
-
-
-    // initial variables for connection information (TO BE CHANGED)
-     
-    clean();
     
+    // int err;
+    // // TODO:
+    // // Parse the grass.conf file
+    // parse_grass(prog_data);
 
+    // err = init_server(prog_data);
+    // if(err < 0){
+    //     error("Error initializing server \n");
+    // }
+
+    // accept_connections(prog_data);
+
+
+    // // initial variables for connection information (TO BE CHANGED)
+     
+    // clean();
+    
+    prog_data = new data_t();
+    prog_data->main_portno = 0;
+    prog_data->main_socket = 0;
+    prog_data->base_dir = "";
+    prog_data->users = vector<user_t>();
+        
+    parse_grass(prog_data);
     return 0;
 
 }
