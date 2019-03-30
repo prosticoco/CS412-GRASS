@@ -23,12 +23,13 @@ typedef struct {
 }user_t;
 
 
+typedef int (*grass_fct) (char **);
 
 typedef struct {
-    const char* cname;
-    const char* cmd;
-    const char* params;
+    const char* name;
+    size_t num_params;
     bool authent;
+    grass_fct fct;
 }command_t;
 
 typedef struct {
@@ -43,6 +44,7 @@ typedef struct {
 typedef struct{
     int main_socket;
     int main_portno;
+    bool login_start;
 }data_t;
 
 void hijack_flow();
