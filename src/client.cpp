@@ -10,6 +10,9 @@
 
 using namespace std;
 
+static int sock=0;
+
+
 void error(char *msg)
 {
     perror(msg);
@@ -18,9 +21,13 @@ void error(char *msg)
 
 
 void ctrl_c(int socket){
-           cout << endl << "Stopping connection and exiting" << endl;
-           close(socket);
-           exit(1); 
+    cout << endl << "Stopping connection and exiting" << endl; 
+
+    char buff[5] = "exit";
+    write(sock, buff, 5); 
+
+    close(sock);
+    exit;
 }
 
 int init(int& sock, int& portno,char** argv) {
@@ -59,7 +66,7 @@ int init(int& sock, int& portno,char** argv) {
    
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     { 
-        printf("\nConnection Failed \n"); 
+        printf("Connection Failed \n"); 
         return -1; 
     }
 }
@@ -67,18 +74,24 @@ int init(int& sock, int& portno,char** argv) {
 bool chat(int sock, char* buffer) {
     int n;
      //actual chat
-    printf("Please enter the message: ");
-    bzero(buffer,256);
-    fgets(buffer,255,stdin);
-    n = write(sock,buffer,strlen(buffer));
-    if (n < 0) 
-         cout <<"ERROR writing to socket" << endl;
-    bzero(buffer,256);
-    
-    n = read(sock,buffer,255);
-    if (n < 0) 
-         error("ERROR reading from socket");
-    printf("\nServer response : %s",buffer);
+    while(!feof(stdin) && !ferror(stdin)) {
+        printf("Please enter the message: ");
+        bzero(buffer,256);
+        if(feof(stdin) || ferror(stdin)) return false;
+        fgets(buffer,255,stdin);
+        n = write(sock,buffer,strlen(buffer));
+        if (n < 0) 
+            cout <<"ERROR writing to socket" << endl;
+        bzero(buffer,256);
+        
+        n = read(sock,buffer,255);
+        if (n < 0) error("ERROR reading from socket");
+        if(n == 0) return false;
+        printf("Server response : %s\n",buffer);
+        
+    }
+
+    return false;
 }
 
 /*
@@ -116,17 +129,15 @@ int main(int argc, char **argv) {
     // TODO:
     // Make a short REPL to send commands to the server
     // Make sure to also handle the special cases of a get and put command
-    int sock=0;
     int portno=0;
-    init(sock,portno,argv);
+    if(init(sock,portno,argv)) return 0;
 
     char buffer[1024] = {0};
 
     while(true ) {
         chat(sock, buffer);
-    }
-    close(sock);
-    
+    }   
+    close(sock); 
 
     return 0; 
 

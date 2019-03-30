@@ -10,12 +10,12 @@ DEPS = $(wildcard $(INCLUDES)/%.h)
 all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
 
 cmd.o : $(SRCDIR)/cmd.cpp $(INCLUDES)/cmd.h
-		$(CC) $(CFLAGS) -c $@
+		$(CC) -c $(CFLAGS) $< -o $@
 
-$(BINDIR)/client: $(SRCDIR)/client.cpp
-	$(CC) $(CFLAGS) $< -o $@
+$(BINDIR)/client: $(SRCDIR)/client.cpp $(OBJS)
+	$(CC) $(CFLAGS) $< -o $@ $(OBJS)
 
-$(BINDIR)/server: $(SRCDIR)/server.cpp
+$(BINDIR)/server: $(SRCDIR)/server.cpp $(OBJS)
 	$(CC) $(CFLAGS) $< -o $@ $(OBJS)
 
 .PHONY: clean
