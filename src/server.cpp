@@ -10,6 +10,7 @@
 #include <iterator>
 #include <iostream>
 #include "error.h"
+#include "cmd.h"
 
 #define BUFFER_MAX_SIZE 256
 #define NUM_COMMANDS 10
@@ -22,6 +23,9 @@ static data_t* prog_data;
 char port[7] = "31337";
 
 using namespace std;
+
+
+void test_function(int sockfd);
 
 /**
  * @brief Default error function
@@ -82,6 +86,9 @@ void accept_connections(data_t* data){
         if(new_sockfd < 0){
             error("ERROR on accept\n");
         }
+        test_function(new_sockfd);
+
+
         // Create a Thread or Child to callback connection handler
     }
 }
@@ -200,23 +207,17 @@ void parse_grass(data_t * data) {
 void test_function(int sockfd){
     char buffer[BUFFER_MAX_SIZE];
     int n;
-
+    char* bug;
     while(1){
         printf("Reading from socket \n");
         bzero(buffer,BUFFER_MAX_SIZE);
         read(sockfd,buffer,sizeof(buffer));
-        printf("From Client : %s \n To Client : ",buffer);
-        bzero(buffer,BUFFER_MAX_SIZE);
-        n = 0;
-        while((buffer[n++] = getchar()) != '\n');
-
-        write(sockfd,buffer,sizeof(buffer));
-
+        printf("From Client : %s \n",buffer);
         if(strncmp("exit",buffer,4) == 0){
             printf("Server Exit ... \n");
             break;
         }
-
+        process_cmd(buffer,bug);
 
     }
 }
@@ -248,6 +249,13 @@ int main() {
     prog_data->users = vector<user_t>();
         
     parse_grass(prog_data);
+    int err = 0;
+    err = init_server(prog_data);
+    if(err){
+        printf("Error : %d \n",err);
+        return err;
+    }
+    accept_connections(prog_data);
     return 0;
 
 }

@@ -36,9 +36,15 @@ int process_cmd(char* cmd,char* out){
 }
 
 
-int cmd_login(char (*args)[MAX_ARG_SIZE]);
+int cmd_login(char (*args)[MAX_ARG_SIZE]){
+    printf("Logging in \n");
+    return 0;
+}
 
-int cmd_pass(char (*args)[MAX_ARG_SIZE]);
+int cmd_pass(char (*args)[MAX_ARG_SIZE]){
+    printf("THANKS FOR THE PASSWORD \n");
+    return 0;
+}
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;
