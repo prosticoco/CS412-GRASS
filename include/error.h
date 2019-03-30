@@ -6,7 +6,8 @@
     ERROR_NETWORK= -128,
     ERROR_SOCKET,
     ERROR_NULL,
-    ERROR_CMD
+    ERROR_CMD,
+    ERROR_TOKEN
 };
 
 

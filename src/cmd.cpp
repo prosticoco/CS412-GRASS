@@ -18,23 +18,35 @@ command_t cmds[NUM_COMMANDS] = {
  */
 int process_cmd(char* cmd,char* out){
     if(cmd == NULL || strlen(cmd) > MAX_INPUT_SIZE){
+        printf("Error null command or too long \n");
         return ERROR_NULL;
     }
+    cmd[strlen(cmd)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
-    size_t num_tokens = tokenize_cmd(cmd,splitted_cmd);
-
+    int num_tokens = tokenize_cmd(cmd,splitted_cmd);
+    if(num_tokens <= 0){
+        printf("Error tokenizer \n");
+        return ERROR_TOKEN;
+    }
+    printf("command name : [%s]\n",splitted_cmd[0]);
+    printf("real command name : [%s]\n",cmds[0].name);
     int i = 0;
     int err = 0;
     bool found = false;
     while(i < NUM_COMMANDS && !found) {
         if(strncmp(splitted_cmd[0], cmds[i].name, MAX_ARG_SIZE) == 0) {
+            printf("found command \n");
             found = true;
             err = cmds[i].fct(&splitted_cmd[1]); 
         }
         i++;
     }
 
-    if(!found) return ERROR_CMD;
+    if(!found){
+        printf("Unknown command \n");
+        return ERROR_CMD;
+
+    } 
 
     return err;
 
@@ -52,16 +64,20 @@ int cmd_pass(char (*args)[MAX_ARG_SIZE]){
 }
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
+    printf("toooooooken time \n");
     int i = 0;
     int token_num = 0;
     // on recoit le premier token
     char* token = strtok(in, " ");
+    printf("test1\n");
     // on met la condition i < 4 dans la boucle afin de garantir de ne pas tokeniser plus de 4 entrées
     while(token != NULL && i < MAX_TOKENS){
+        printf("test2\n");
         token_num ++;
-
-        token = strtok(NULL," ");
+        strncpy(out[i],token,MAX_ARG_SIZE);
+        token = strtok(NULL," ");      
         i += 1;
     }
+    printf("test3\n");
     return token_num;
 }
