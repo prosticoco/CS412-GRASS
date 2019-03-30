@@ -14,10 +14,6 @@
 
 #define BUFFER_MAX_SIZE 256
 
-static struct User **userlist;
-static int numUsers;
-static struct Command **cmdlist;
-static int numCmds;
 static data_t* prog_data;
 char port[7] = "31337";
 
@@ -86,7 +82,8 @@ void accept_connections(data_t* data){
             error("ERROR on accept\n");
         }
         test_function(new_sockfd);
-
+        close(new_sockfd);
+        break;
 
         // Create a Thread or Child to callback connection handler
     }
@@ -204,43 +201,38 @@ void parse_grass(data_t * data) {
  * @param sockfd the socket for chatting
  */
 void test_function(int sockfd){
+    int err = 0;
     char buffer[BUFFER_MAX_SIZE];
-    int n;
-    char* bug;
+    char bug[BUFFER_MAX_SIZE];
     while(1){
+        ssize_t b;
         printf("Reading from socket \n");
         bzero(buffer,BUFFER_MAX_SIZE);
-        read(sockfd,buffer,sizeof(buffer));
+        b = read(sockfd,buffer,sizeof(buffer));
+        if(!b){
+            break;
+        }
         printf("From Client : %s \n",buffer);
         if(strncmp("exit",buffer,4) == 0){
             printf("Server Exit ... \n");
             break;
         }
-        process_cmd(buffer,bug);
-
+        printf("hihihihihihihih\n");
+        err = process_cmd(buffer,bug);
+        if(err < 0){
+            printf("Error processing message \n");
+            return;
+        }
+        b = write(sockfd,bug,sizeof(bug));
+        if(!b){
+            printf("error write \n");
+            break;
+        }
     }
 }
 
 int main() {
-
-    
-    // int err;
-    // // TODO:
-    // // Parse the grass.conf file
-    // parse_grass(prog_data);
-
-    // err = init_server(prog_data);
-    // if(err < 0){
-    //     error("Error initializing server \n");
-    // }
-
-    // accept_connections(prog_data);
-
-
-    // // initial variables for connection information (TO BE CHANGED)
-     
-    // clean();
-    
+  
     prog_data = new data_t();
     prog_data->main_portno = 0;
     prog_data->main_socket = 0;
