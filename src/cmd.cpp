@@ -2,7 +2,12 @@
 #include "error.h"
 #include <string.h>
 #include <stdlib.h>
+#define NUM_COMMANDS 2
 
+command_t cmds[NUM_COMMANDS] = {
+    {"login",1,false,cmd_login},
+    {"pass",1,false,cmd_pass}
+};
 
 /**
  * @brief Processes command

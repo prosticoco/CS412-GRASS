@@ -13,7 +13,6 @@
 #include "cmd.h"
 
 #define BUFFER_MAX_SIZE 256
-#define NUM_COMMANDS 10
 
 static struct User **userlist;
 static int numUsers;
