@@ -18,6 +18,8 @@
 #include <sys/stat.h>
 #include <vector>
 
+#define MAX_ARG_SIZE 32
+
 typedef struct {
     const std::string uname;
     const std::string pass;
@@ -25,7 +27,7 @@ typedef struct {
 }user_t;
 
 
-typedef int (*grass_fct) (char **);
+typedef int (*grass_fct) (char (*)[MAX_ARG_SIZE]);
 
 typedef struct {
     const char* name;
