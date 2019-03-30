@@ -6,6 +6,7 @@
 
 
 
+
 /**
  * @brief Processes command
  * 
@@ -26,7 +27,7 @@ int cmd_login(char** args);
 
 int cmd_pass(char** args);
 
-int tokenize_cmd(char *in, char* out [MAX_ARG_SIZE] ){
+int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;
     int token_num = 0;
     // on recoit le premier token
@@ -34,7 +35,7 @@ int tokenize_cmd(char *in, char* out [MAX_ARG_SIZE] ){
     // on met la condition i < 4 dans la boucle afin de garantir de ne pas tokeniser plus de 4 entrées
     while(token != NULL && i < MAX_TOKENS){
         token_num ++;
-        out[i] = token;
+        strncpy(out[i],token,MAX_ARG_SIZE);
         token = strtok(NULL," ");
         i += 1;
     }
