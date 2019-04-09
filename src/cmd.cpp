@@ -2,6 +2,7 @@
 #include "error.h"
 #include <string.h>
 #include <stdlib.h>
+#include <iostream>
 #define NUM_COMMANDS 2
 
 command_t cmds[NUM_COMMANDS] = {
@@ -16,28 +17,28 @@ command_t cmds[NUM_COMMANDS] = {
  * @param out the output of the command to be sent back to the client
  * @return int 0 if successful, < 0 if error 
  */
-int process_cmd(char* cmd,char* out){
-    if(cmd == NULL || strlen(cmd) > MAX_INPUT_SIZE){
+int process_cmd(connection_t * curr_co){
+    if(curr_co->curr_in == NULL || strlen(curr_co->curr_in) > MAX_INPUT_SIZE){
         printf("Error null command or too long \n");
         return ERROR_NULL;
     }
-    cmd[strlen(cmd)-1] = '\0';
+    curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
-    int num_tokens = tokenize_cmd(cmd,splitted_cmd);
+    int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
     if(num_tokens <= 0){
         printf("Error tokenizer \n");
         return ERROR_TOKEN;
     }
-    printf("command name : [%s]\n",splitted_cmd[0]);
-    printf("real command name : [%s]\n",cmds[0].name);
     int i = 0;
     int err = 0;
     bool found = false;
     while(i < NUM_COMMANDS && !found) {
         if(strncmp(splitted_cmd[0], cmds[i].name, MAX_ARG_SIZE) == 0) {
-            printf("found command \n");
             found = true;
-            err = cmds[i].fct(&splitted_cmd[1]); 
+            //todo initialize data structure to pass to cmd function
+            // switch case on the name of the function
+            curr_co->curr_args = &splitted_cmd[1];
+            err = cmds[i].fct(curr_co); 
         }
         i++;
     }
@@ -53,31 +54,59 @@ int process_cmd(char* cmd,char* out){
 }
 
 
-int cmd_login(char (*args)[MAX_ARG_SIZE]){
+int cmd_login(connection_t* curr_co){
     printf("Logging in \n");
+    curr_co->ready_for_check = true;
+    strncpy(curr_co->username,curr_co->curr_args[0],MAX_USERNAME_SIZE);
+    strcpy(curr_co->curr_out,"Please provide your password \n");
     return 0;
 }
 
-int cmd_pass(char (*args)[MAX_ARG_SIZE]){
-    printf("THANKS FOR THE PASSWORD \n");
+int cmd_pass(connection_t * curr_co){
+    if(curr_co->auth) {
+        strcpy(curr_co->curr_out,"User already authentified \n");
+        return 0;
+    }
+    if(!(curr_co->ready_for_check)){
+        strcpy(curr_co->curr_out,"Please provide a username first \n");
+        return 0;
+    }
+    
+    bool found = false;
+    for( auto& user : curr_co->server_data->users) {
+        std::cout << user->uname << std::endl;
+        if( strncmp(user->uname, curr_co->username, strlen(user->uname)) == 0) {
+            std::cout << "[" << user->pass << "]" << std::endl;
+            printf("argument : [%s] \n",curr_co->curr_args[0]);
+            if(strncmp(curr_co->curr_args[0], user->pass,  strlen(user->pass))== 0) {
+                curr_co->auth = true;
+                curr_co->ready_for_check = false;
+                strcpy(curr_co->curr_out,"Authentication successful \n");
+                found = true;
+                break;
+            }
+        }
+        
+    }
+
+    if(!found) {
+        strcpy(curr_co->curr_out,"Invalid credentials \n");
+    }
+
     return 0;
 }
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
-    printf("toooooooken time \n");
     int i = 0;
     int token_num = 0;
     // on recoit le premier token
     char* token = strtok(in, " ");
-    printf("test1\n");
     // on met la condition i < 4 dans la boucle afin de garantir de ne pas tokeniser plus de 4 entrées
     while(token != NULL && i < MAX_TOKENS){
-        printf("test2\n");
         token_num ++;
         strncpy(out[i],token,MAX_ARG_SIZE);
         token = strtok(NULL," ");      
         i += 1;
     }
-    printf("test3\n");
     return token_num;
 }

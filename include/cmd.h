@@ -6,12 +6,12 @@
 #define MAX_TOKENS 2
 #define MAX_INPUT_SIZE 256
 
-int process_cmd(char* cmd,char* out);
+int process_cmd(connection_t* curr_co);
 
 int tokenize_cmd(char* cmd,char (*out)[MAX_ARG_SIZE]);
 
-int cmd_login(char (*args)[MAX_ARG_SIZE]);
+int cmd_login(connection_t* curr_co);
 
-int cmd_pass(char (*args)[MAX_ARG_SIZE]);
+int cmd_pass(connection_t* curr_co);
 
 #endif

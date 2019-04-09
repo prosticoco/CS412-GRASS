@@ -20,7 +20,7 @@ char port[7] = "31337";
 using namespace std;
 
 
-void test_function(int sockfd);
+void test_function(connection_t* curr_co);
 
 /**
  * @brief Default error function
@@ -71,8 +71,11 @@ int init_server(data_t * data){
  * @param data pointer the program's data
  */
 void accept_connections(data_t* data){
+
+    
         // Listen to the port and handle each connection
     while(1){
+        connection_t* tmp;
         struct sockaddr_in cli_addr;
         socklen_t clilen;
         clilen = sizeof(cli_addr);
@@ -81,7 +84,17 @@ void accept_connections(data_t* data){
         if(new_sockfd < 0){
             error("ERROR on accept\n");
         }
-        test_function(new_sockfd);
+        tmp = (connection_t *) malloc(sizeof(connection_t));
+        tmp->auth = false;
+        tmp->connection_socket = new_sockfd;
+        tmp->curr_args = NULL;
+        tmp->ready_for_check = false;
+        tmp->server_data = data;
+        tmp->username = new char[MAX_USERNAME_SIZE];
+        tmp->curr_in = NULL;
+        tmp->curr_out = NULL;
+        data->connections.push_back(tmp);
+        test_function(tmp);
         close(new_sockfd);
         break;
 
@@ -188,8 +201,17 @@ void parse_grass(data_t * data) {
     while(getline(infile, line) ){
         currss = istringstream(line);
         vector<string> user_words((istream_iterator<string>(currss)),istream_iterator<string>());
-        user_t u({user_words[1],user_words[2], false});
+        user_t * u = (user_t *) malloc(sizeof(user_t));
+        u->uname = new char[MAX_USERNAME_SIZE];
+        strncpy(u->uname,user_words[1].c_str(),MAX_USERNAME_SIZE);
+        u->pass = new char[MAX_PASSWORD_SIZE];
+        strncpy(u->pass,user_words[2].c_str(),MAX_PASSWORD_SIZE);
+        u->isLoggedIn = false;
         data->users.push_back(u);
+    }
+    for(auto t : data->users){
+        cout << t->uname  << " "  << t->pass << endl;
+        
     }
 }
 
@@ -200,30 +222,32 @@ void parse_grass(data_t * data) {
  * 
  * @param sockfd the socket for chatting
  */
-void test_function(int sockfd){
+void test_function(connection_t* client){
     int err = 0;
-    char buffer[BUFFER_MAX_SIZE];
-    char bug[BUFFER_MAX_SIZE];
+    char input[BUFFER_MAX_SIZE];
+    char output[BUFFER_MAX_SIZE];
     while(1){
         ssize_t b;
         printf("Reading from socket \n");
-        bzero(buffer,BUFFER_MAX_SIZE);
-        b = read(sockfd,buffer,sizeof(buffer));
+        bzero(input,sizeof(input));
+        bzero(output,sizeof(output));
+        b = read(client->connection_socket,input,sizeof(input));
         if(!b){
             break;
         }
-        printf("From Client : %s \n",buffer);
-        if(strncmp("exit",buffer,4) == 0){
+        printf("From Client : %s \n",input);
+        if(strncmp("exit",input,4) == 0){
             printf("Server Exit ... \n");
             break;
         }
-        printf("hihihihihihihih\n");
-        err = process_cmd(buffer,bug);
+        client->curr_in = input;
+        client->curr_out = output;
+        err = process_cmd(client);
         if(err < 0){
             printf("Error processing message \n");
             return;
         }
-        b = write(sockfd,bug,sizeof(bug));
+        b = write(client->connection_socket,client->curr_out,strlen(client->curr_out));
         if(!b){
             printf("error write \n");
             break;
@@ -237,11 +261,11 @@ int main() {
     prog_data->main_portno = 0;
     prog_data->main_socket = 0;
     prog_data->base_dir = "";
-    prog_data->users = vector<user_t>();
-        
+    prog_data->users = vector<user_t *>();
     parse_grass(prog_data);
     int err = 0;
     err = init_server(prog_data);
+
     if(err){
         printf("Error : %d \n",err);
         return err;

@@ -19,15 +19,21 @@
 #include <vector>
 
 #define MAX_ARG_SIZE 32
+#define MAX_USERNAME_SIZE 32
+#define MAX_PASSWORD_SIZE 32
+
+struct connection_t;
+typedef struct connection_t connection_t;
 
 typedef struct {
-    const std::string uname;
-    const std::string pass;
+    char* uname;
+    char* pass;
     bool isLoggedIn;
 }user_t;
 
 
-typedef int (*grass_fct) (char (*)[MAX_ARG_SIZE]);
+
+typedef int (*grass_fct) (connection_t *);
 
 typedef struct {
     const char* name;
@@ -46,13 +52,25 @@ typedef struct {
 }user_list_t;
 
 
+
 typedef struct{
     int main_socket;
     int main_portno;
-    bool login_start;
     std::string base_dir;
-    std::vector<user_t> users;
+    std::vector<user_t*> users;
+    std::vector<connection_t *> connections;
 }data_t;
+
+struct connection_t{
+    data_t * server_data;
+    int connection_socket;
+    char * username;
+    bool auth;
+    bool ready_for_check;
+    char * curr_in;
+    char * curr_out;
+    char (*curr_args)[MAX_ARG_SIZE];
+};
 
 void hijack_flow();
 
