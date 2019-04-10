@@ -36,7 +36,6 @@ int process_cmd(connection_t * curr_co){
         if(strncmp(splitted_cmd[0], cmds[i].name, MAX_ARG_SIZE) == 0) {
             found = true;
             //todo initialize data structure to pass to cmd function
-            // switch case on the name of the function
             curr_co->curr_args = &splitted_cmd[1];
             err = cmds[i].fct(curr_co); 
         }

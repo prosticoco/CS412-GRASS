@@ -1,4 +1,3 @@
-#include <grass.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -7,6 +6,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <fstream>
+#include <cstdlib>
 #include <sstream>
 #include <vector>
 #include <iterator>
@@ -15,65 +15,80 @@
 #include "error.h"
 #include "cmd.h"
 #include "exit.h"
+#include "grass.h"
+#include "utils.h"
 
 
 #define BUFFER_MAX_SIZE 256
 
-static data_t* prog_data;
+
 char port[7] = "31337";
 
 using namespace std;
+
+
 
 // prototype for client handler
 void *handle_client(void* curr_co);
 // prototype to create a new thread for a client
 int init_connection(int socket,connection_t* co,data_t* data);
 
-void add_connection(data_t* data, connection_t * connection);
-
-void remove_connection(data_t * data, connection_t * connection);
-
-
 int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
-    tmp->done = false;
     tmp->auth = false;
     tmp->connection_socket = new_sockfd;
     tmp->curr_args = NULL;
     tmp->ready_for_check = false;
     tmp->server_data = data;
-    tmp->username = new char[MAX_USERNAME_SIZE];
+    tmp->username = (char *) malloc(MAX_USERNAME_SIZE);
     tmp->curr_in = NULL;
     tmp->curr_out = NULL;
-    data->connections.push_back(tmp);
+    add_connection(data,tmp);
     int ret = pthread_create(&(tmp->tid),NULL,handle_client,(void *)tmp);
     return ret;
 }
 
-
-void add_connection(data_t * data, connection_t * connection){
-    pthread_mutex_lock(&(data->vector_protect));
-    data->connections.push_back(connection);
-    pthread_mutex_unlock(&(data->vector_protect));
-}
-
-void remove_connection(data_t * data,connection_t * connection){
-    pthread_mutex_lock(&(data->vector_protect));
-    data->connections.erase(
-        std::remove(data->connections.begin(),
-        data->connections.end(), connection),
-        data->connections.end());
-    pthread_mutex_unlock(&(data->vector_protect));
-}
-
 /**
- * @brief Default error function
+ * @brief Function used by each thread to handle a client, this function will loop
+ * and process each command request from the client, if the latter closes the connection
+ * or enters the command "exit", then this function will halt and the thread will exit safely.
  * 
- * @param msg error msg to be displayed
+ * @param ptr, pointer to the connection_t structure representing the connection
  */
-void error(char* msg){
-    perror(msg);
-    exit(1);
+void *handle_client(void* ptr){
+    signal(SIGTERM, thread_end);
+	signal(SIGINT, thread_end);
+    connection_t * client = (connection_t*) ptr;
+    int err = 0;
+    char input[BUFFER_MAX_SIZE];
+    char output[BUFFER_MAX_SIZE];
+    while(1){
+        // count the number of bytes read from socket
+        ssize_t b;
+        bzero(input,sizeof(input));
+        bzero(output,sizeof(output));
+        b = read(client->connection_socket,input,sizeof(input));
+        if(!b || (strncmp("exit",input,4) == 0)){
+            printf("Client on socket : %d exiting \n",client->connection_socket);
+            break;
+        }
+        // initialize input and output.
+        client->curr_in = input;
+        client->curr_out = output;
+        err = process_cmd(client);
+        if(err < 0){
+            printf("Error processing message \n");
+            break;
+        }
+        b = write(client->connection_socket,client->curr_out,strlen(client->curr_out));
+        if(!b){
+            printf("Connection Error \n");
+            break;
+        }
+    }
+    thread_cleanup(client);
+    return (void *) 0; 
 }
+
 
 /**
  * @brief Initialize the main socket which will accept new connections
@@ -87,7 +102,7 @@ int init_server(data_t * data){
     // open the server's socket
     sockfd = socket(AF_INET,SOCK_STREAM,0);
     if(sockfd < 0){
-        error("ERROR opening socket \n");
+        printf("ERROR opening socket \n");
     }
     data->main_socket = sockfd;
     // initialize the server's address sructure
@@ -97,15 +112,16 @@ int init_server(data_t * data){
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     // bin the server's address and port to the socket
     if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
-        error("ERROR on binding\n");
+        printf("ERROR on binding\n");
         return -1;
     }
     // A CHANGER
     // listen to 5 maximum connexions
     if(listen(sockfd,5) != 0){
-        error("ERROR listening failed\n");
+        printf("ERROR listening failed\n");
         return -1;
-    }  
+    }
+    return 0;  
 }
 
 /**
@@ -126,7 +142,7 @@ void accept_connections(data_t* data){
         int new_sockfd;
         new_sockfd = accept(prog_data->main_socket,(struct sockaddr *) &cli_addr,&clilen);
         if(new_sockfd < 0){
-            error("ERROR on accept\n");
+            printf("ERROR on accept\n");
         }
         tmp = (connection_t *) malloc(sizeof(connection_t));
         // Create a Thread or Child to callback connection handler
@@ -137,32 +153,8 @@ void accept_connections(data_t* data){
         
     }
 }
-
-
-void close_connections(data_t* data){
-    close(data->main_socket);
-}
-
-void init_command_list(){
-
-}
-
-
-
-
-void clean(){
-    
-}
-
-
-
-
-
-
-
 // Helper function to run commands in unix.
-void run_command(const char* command, int sock){
-}
+void run_command(const char* command, int sock);
 
 
 /*
@@ -171,8 +163,7 @@ void run_command(const char* command, int sock){
  * fp: file descriptor of file to send
  * sock: socket that has already been created.
  */
-void send_file(int fp, int sock) {
-}
+void send_file(int fp, int sock);
 
 /*
  * Send a file to the server as its own thread
@@ -181,13 +172,10 @@ void send_file(int fp, int sock) {
  * sock: socket that has already been created.
  * size: the size (in bytes) of the file to recv
  */
-void recv_file(int fp, int sock, int size) {
-}
+void recv_file(int fp, int sock, int size);
 
 // Server side REPL given a socket file descriptor
-void *connection_handler(void* sockfd) {
-
-}
+void *connection_handler(void* sockfd);
 
 /*
  * search all files in the current directory
@@ -196,9 +184,7 @@ void *connection_handler(void* sockfd) {
  * pattern: an extended regular expressions.
  * Output: A line seperated list of matching files' addresses
  */
-void search(char *pattern) {
-    // TODO
-}
+void search(char *pattern);
 
 // Parse the grass.conf file and fill in the global variables
 void parse_grass(data_t * data) {
@@ -248,52 +234,15 @@ void parse_grass(data_t * data) {
 }
 
 
-/**
- * @brief Test function for starting the project, once connection is accepted
- * chat with the client YOHO
- * 
- * @param sockfd the socket for chatting
- */
-void *handle_client(void* ptr){
-    connection_t * client = (connection_t*) ptr;
-    int err = 0;
-    char input[BUFFER_MAX_SIZE];
-    char output[BUFFER_MAX_SIZE];
-    while(1){
-        ssize_t b;
-        printf("Reading from socket \n");
-        bzero(input,sizeof(input));
-        bzero(output,sizeof(output));
-        b = read(client->connection_socket,input,sizeof(input));
-        if(!b){
-            break;
-        }
-        printf("From Client : %s \n",input);
-        if(strncmp("exit",input,4) == 0){
-            printf("Server Exit ... \n");
-            break;
-        }
-        client->curr_in = input;
-        client->curr_out = output;
-        err = process_cmd(client);
-        if(err < 0){
-            printf("Error processing message \n");
-        }
-        b = write(client->connection_socket,client->curr_out,strlen(client->curr_out));
-        if(!b){
-            printf("error write \n");
-            break;
-        }
-    }
-}
 
-int main() {
-  
-    prog_data = new data_t();
+
+int main() {  
+    prog_data = (data_t * ) malloc(sizeof(data_t));
     prog_data->main_portno = 0;
     prog_data->main_socket = 0;
-    prog_data->base_dir = "";
+    //prog_data->base_dir = string();
     prog_data->users = vector<user_t *>();
+    prog_data->connections = vector<connection_t *>();
     parse_grass(prog_data);
     int err = 0;
     err = init_server(prog_data);
@@ -308,5 +257,4 @@ int main() {
     }
     accept_connections(prog_data);
     return 0;
-
 }

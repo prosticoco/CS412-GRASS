@@ -32,10 +32,6 @@ typedef struct {
     bool isLoggedIn;
 }user_t;
 
-
-
-
-
 typedef int (*grass_fct) (connection_t *);
 
 typedef struct {
@@ -67,7 +63,6 @@ typedef struct{
 
 struct connection_t{
     pthread_t tid;
-    bool done;
     data_t * server_data;
     int connection_socket;
     char * username;
@@ -78,6 +73,11 @@ struct connection_t{
     char (*curr_args)[MAX_ARG_SIZE];
 };
 
+
+extern data_t* prog_data;
+
 void hijack_flow();
+
+
 
 #endif
