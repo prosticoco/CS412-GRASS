@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -11,6 +12,7 @@
 #include <iostream>
 #include "error.h"
 #include "cmd.h"
+#include "exit.h"
 
 #define BUFFER_MAX_SIZE 256
 
@@ -20,7 +22,7 @@ char port[7] = "31337";
 using namespace std;
 
 
-void test_function(connection_t* curr_co);
+void handle_client(connection_t* curr_co);
 
 /**
  * @brief Default error function
@@ -71,7 +73,11 @@ int init_server(data_t * data){
  * @param data pointer the program's data
  */
 void accept_connections(data_t* data){
+    
 
+    signal(SIGTERM, stop);
+	signal(SIGINT, stop);
+    
     
         // Listen to the port and handle each connection
     while(1){
@@ -94,7 +100,7 @@ void accept_connections(data_t* data){
         tmp->curr_in = NULL;
         tmp->curr_out = NULL;
         data->connections.push_back(tmp);
-        test_function(tmp);
+        handle_client(tmp);
         close(new_sockfd);
         break;
 
@@ -222,7 +228,7 @@ void parse_grass(data_t * data) {
  * 
  * @param sockfd the socket for chatting
  */
-void test_function(connection_t* client){
+void handle_client(connection_t* client){
     int err = 0;
     char input[BUFFER_MAX_SIZE];
     char output[BUFFER_MAX_SIZE];

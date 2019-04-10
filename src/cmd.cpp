@@ -26,7 +26,7 @@ int process_cmd(connection_t * curr_co){
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
     if(num_tokens <= 0){
-        printf("Error tokenizer \n");
+        printf("Error : Tokenizer : %d \n",num_tokens);
         return ERROR_TOKEN;
     }
     int i = 0;
@@ -44,8 +44,8 @@ int process_cmd(connection_t * curr_co){
     }
 
     if(!found){
-        printf("Unknown command \n");
-        return ERROR_CMD;
+        strcpy(curr_co->curr_out,"Please provide a valid command \n");
+        return err;
 
     } 
 
@@ -70,8 +70,7 @@ int cmd_pass(connection_t * curr_co){
     if(!(curr_co->ready_for_check)){
         strcpy(curr_co->curr_out,"Please provide a username first \n");
         return 0;
-    }
-    
+    }    
     bool found = false;
     for( auto& user : curr_co->server_data->users) {
         std::cout << user->uname << std::endl;
@@ -80,7 +79,6 @@ int cmd_pass(connection_t * curr_co){
             printf("argument : [%s] \n",curr_co->curr_args[0]);
             if(strncmp(curr_co->curr_args[0], user->pass,  strlen(user->pass))== 0) {
                 curr_co->auth = true;
-                curr_co->ready_for_check = false;
                 strcpy(curr_co->curr_out,"Authentication successful \n");
                 found = true;
                 break;
@@ -88,11 +86,10 @@ int cmd_pass(connection_t * curr_co){
         }
         
     }
-
     if(!found) {
-        strcpy(curr_co->curr_out,"Invalid credentials \n");
+        strcpy(curr_co->curr_out,"Invalid credentials \n");     
     }
-
+    curr_co->ready_for_check = false;
     return 0;
 }
 
