@@ -5,14 +5,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <pthread.h>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <iterator>
 #include <iostream>
+#include <algorithm>
 #include "error.h"
 #include "cmd.h"
 #include "exit.h"
+
 
 #define BUFFER_MAX_SIZE 256
 
@@ -21,8 +24,46 @@ char port[7] = "31337";
 
 using namespace std;
 
+// prototype for client handler
+void *handle_client(void* curr_co);
+// prototype to create a new thread for a client
+int init_connection(int socket,connection_t* co,data_t* data);
 
-void handle_client(connection_t* curr_co);
+void add_connection(data_t* data, connection_t * connection);
+
+void remove_connection(data_t * data, connection_t * connection);
+
+
+int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
+    tmp->done = false;
+    tmp->auth = false;
+    tmp->connection_socket = new_sockfd;
+    tmp->curr_args = NULL;
+    tmp->ready_for_check = false;
+    tmp->server_data = data;
+    tmp->username = new char[MAX_USERNAME_SIZE];
+    tmp->curr_in = NULL;
+    tmp->curr_out = NULL;
+    data->connections.push_back(tmp);
+    int ret = pthread_create(&(tmp->tid),NULL,handle_client,(void *)tmp);
+    return ret;
+}
+
+
+void add_connection(data_t * data, connection_t * connection){
+    pthread_mutex_lock(&(data->vector_protect));
+    data->connections.push_back(connection);
+    pthread_mutex_unlock(&(data->vector_protect));
+}
+
+void remove_connection(data_t * data,connection_t * connection){
+    pthread_mutex_lock(&(data->vector_protect));
+    data->connections.erase(
+        std::remove(data->connections.begin(),
+        data->connections.end(), connection),
+        data->connections.end());
+    pthread_mutex_unlock(&(data->vector_protect));
+}
 
 /**
  * @brief Default error function
@@ -72,13 +113,10 @@ int init_server(data_t * data){
  * 
  * @param data pointer the program's data
  */
-void accept_connections(data_t* data){
-    
-
+void accept_connections(data_t* data){   
+    int err = 0;
     signal(SIGTERM, stop);
-	signal(SIGINT, stop);
-    
-    
+	signal(SIGINT, stop); 
         // Listen to the port and handle each connection
     while(1){
         connection_t* tmp;
@@ -91,20 +129,12 @@ void accept_connections(data_t* data){
             error("ERROR on accept\n");
         }
         tmp = (connection_t *) malloc(sizeof(connection_t));
-        tmp->auth = false;
-        tmp->connection_socket = new_sockfd;
-        tmp->curr_args = NULL;
-        tmp->ready_for_check = false;
-        tmp->server_data = data;
-        tmp->username = new char[MAX_USERNAME_SIZE];
-        tmp->curr_in = NULL;
-        tmp->curr_out = NULL;
-        data->connections.push_back(tmp);
-        handle_client(tmp);
-        close(new_sockfd);
-        break;
-
         // Create a Thread or Child to callback connection handler
+        err = init_connection(new_sockfd,tmp,data);
+        if(err < 0){
+            printf("Could not initialize new thread \n");
+        }
+        
     }
 }
 
@@ -215,10 +245,6 @@ void parse_grass(data_t * data) {
         u->isLoggedIn = false;
         data->users.push_back(u);
     }
-    for(auto t : data->users){
-        cout << t->uname  << " "  << t->pass << endl;
-        
-    }
 }
 
 
@@ -228,7 +254,8 @@ void parse_grass(data_t * data) {
  * 
  * @param sockfd the socket for chatting
  */
-void handle_client(connection_t* client){
+void *handle_client(void* ptr){
+    connection_t * client = (connection_t*) ptr;
     int err = 0;
     char input[BUFFER_MAX_SIZE];
     char output[BUFFER_MAX_SIZE];
@@ -251,7 +278,6 @@ void handle_client(connection_t* client){
         err = process_cmd(client);
         if(err < 0){
             printf("Error processing message \n");
-            return;
         }
         b = write(client->connection_socket,client->curr_out,strlen(client->curr_out));
         if(!b){
@@ -271,9 +297,13 @@ int main() {
     parse_grass(prog_data);
     int err = 0;
     err = init_server(prog_data);
-
     if(err){
-        printf("Error : %d \n",err);
+        printf("Error Init server : %d \n",err);
+        return err;
+    }
+    err = pthread_mutex_init(&(prog_data->vector_protect),NULL);
+    if(err){
+        printf("Error Init server mutex \n");
         return err;
     }
     accept_connections(prog_data);

@@ -12,6 +12,8 @@ int clean_memory(data_t * data);
 
 int cleanup(data_t * data);
 
+void thread_exit(connection_t* cur_co);
+
 
 
 

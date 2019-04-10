@@ -21,6 +21,7 @@
 #define MAX_ARG_SIZE 32
 #define MAX_USERNAME_SIZE 32
 #define MAX_PASSWORD_SIZE 32
+#define MAX_THREAD_NUMS 16
 
 struct connection_t;
 typedef struct connection_t connection_t;
@@ -30,6 +31,8 @@ typedef struct {
     char* pass;
     bool isLoggedIn;
 }user_t;
+
+
 
 
 
@@ -59,9 +62,12 @@ typedef struct{
     std::string base_dir;
     std::vector<user_t*> users;
     std::vector<connection_t *> connections;
+    pthread_mutex_t vector_protect;
 }data_t;
 
 struct connection_t{
+    pthread_t tid;
+    bool done;
     data_t * server_data;
     int connection_socket;
     char * username;
