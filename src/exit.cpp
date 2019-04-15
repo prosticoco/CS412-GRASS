@@ -16,17 +16,19 @@ void stop(int signum) {
     if(curr_tid != prog_data->main_tid){
         thread_end();
     }
-    printf("Freeing data \n");
+    printf("Program Exiting : Cleaning up memory \n");
 	//reset signal handlers to default
     if(prog_data == NULL){
         printf("prog_data is null \n");
         exit(0);
     }
-	signal(SIGTERM, SIG_DFL);
-	signal(SIGINT, SIG_DFL);
+	//signal(SIGTERM, SIG_DFL);
+	//signal(SIGINT, SIG_DFL);
     connection_t * tmp;
     for(auto c : prog_data->connections){
+        pthread_kill(c->tid, SIGTERM);
         pthread_join(c->tid,NULL);
+        printf("Killed user : [%s] \n",c->username);
         tmp = c;
         free(tmp->username);
         close(tmp->connection_socket);
@@ -41,6 +43,7 @@ void stop(int signum) {
     prog_data->users.clear();
     close(prog_data->main_socket);
     free(prog_data);
+    printf("Successful Memory Cleanup : Exiting :) \n");
     exit(signum);
 }
 
@@ -53,12 +56,11 @@ void stop(int signum) {
  * @return int 
  */
 int thread_cleanup(connection_t* c){
-    printf("Freeing data of user : [%s] with tid : [%lu] \n",c->username,c->tid);
+    printf("Client : [%s] with tid : [%lu] Disconnection. \n",c->username,c->tid);
     remove_connection(c->server_data,c);
     free(c->username);
     close(c->connection_socket);
     free(c);
-    printf("Tread exiting...\n");
     pthread_exit((void *) 0);
 }
 

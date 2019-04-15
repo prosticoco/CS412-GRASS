@@ -34,6 +34,7 @@ void *handle_client(void* curr_co);
 int init_connection(int socket,connection_t* co,data_t* data);
 
 int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
+    printf("Initializing new connection... \n");
     tmp->auth = false;
     tmp->connection_socket = new_sockfd;
     tmp->curr_args = NULL;
@@ -61,6 +62,7 @@ void *handle_client(void* ptr){
     int err = 0;
     char input[BUFFER_MAX_SIZE];
     char output[BUFFER_MAX_SIZE];
+    printf("Connection started for user : [%s] \n",client->username);
     while(1){
         // count the number of bytes read from socket
         ssize_t b;
@@ -237,14 +239,17 @@ void parse_grass(data_t * data) {
 
 
 int main() {
+    printf("Allocating Ressources...\n");
     prog_data = (data_t * ) malloc(sizeof(data_t));
     prog_data->main_portno = 0;
     prog_data->main_socket = 0;
     //prog_data->base_dir = string();
     prog_data->users = vector<user_t *>();
     prog_data->connections = vector<connection_t *>();
+    printf("Parsing Configuration file... \n");
     parse_grass(prog_data);
     int err = 0;
+    printf("Initializing socket... \n");
     err = init_server(prog_data);
     if(err){
         printf("Error Init server : %d \n",err);
@@ -256,6 +261,7 @@ int main() {
         return err;
     }
     prog_data->main_tid = pthread_self();
+    printf("Waiting for new connections... \n");
     accept_connections(prog_data);
     return 0;
 }
