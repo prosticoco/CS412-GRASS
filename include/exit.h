@@ -5,7 +5,7 @@
 
 void stop(int signum);
 
-void thread_end(int signum);
+void thread_end();
 
 int stop_threads(data_t * data);
 

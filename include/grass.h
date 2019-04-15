@@ -53,6 +53,7 @@ typedef struct {
 
 
 typedef struct{
+    pthread_t main_tid;
     int main_socket;
     int main_portno;
     std::string base_dir;

@@ -40,6 +40,8 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
     tmp->ready_for_check = false;
     tmp->server_data = data;
     tmp->username = (char *) malloc(MAX_USERNAME_SIZE);
+    int random = rand() % 1000;
+    sprintf(tmp->username,"Unknown_user_%d",random);
     tmp->curr_in = NULL;
     tmp->curr_out = NULL;
     add_connection(data,tmp);
@@ -55,8 +57,6 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
  * @param ptr, pointer to the connection_t structure representing the connection
  */
 void *handle_client(void* ptr){
-    signal(SIGTERM, thread_end);
-	signal(SIGINT, thread_end);
     connection_t * client = (connection_t*) ptr;
     int err = 0;
     char input[BUFFER_MAX_SIZE];
@@ -236,7 +236,7 @@ void parse_grass(data_t * data) {
 
 
 
-int main() {  
+int main() {
     prog_data = (data_t * ) malloc(sizeof(data_t));
     prog_data->main_portno = 0;
     prog_data->main_socket = 0;
@@ -255,6 +255,7 @@ int main() {
         printf("Error Init server mutex \n");
         return err;
     }
+    prog_data->main_tid = pthread_self();
     accept_connections(prog_data);
     return 0;
 }

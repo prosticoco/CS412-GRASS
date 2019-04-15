@@ -71,11 +71,8 @@ int cmd_pass(connection_t * curr_co){
         return 0;
     }    
     bool found = false;
-    for( auto& user : curr_co->server_data->users) {
-        std::cout << user->uname << std::endl;
+    for(auto& user : curr_co->server_data->users) {
         if( strncmp(user->uname, curr_co->username, strlen(user->uname)) == 0) {
-            std::cout << "[" << user->pass << "]" << std::endl;
-            printf("argument : [%s] \n",curr_co->curr_args[0]);
             if(strncmp(curr_co->curr_args[0], user->pass,  strlen(user->pass))== 0) {
                 curr_co->auth = true;
                 strcpy(curr_co->curr_out,"Authentication successful \n");

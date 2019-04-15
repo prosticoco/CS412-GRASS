@@ -12,6 +12,11 @@ data_t* prog_data = NULL;
  * @param signum signal number which triggered the function
  */
 void stop(int signum) {
+    pthread_t curr_tid = pthread_self();
+    if(curr_tid != prog_data->main_tid){
+        thread_end();
+    }
+    printf("Freeing data \n");
 	//reset signal handlers to default
     if(prog_data == NULL){
         printf("prog_data is null \n");
@@ -21,23 +26,18 @@ void stop(int signum) {
 	signal(SIGINT, SIG_DFL);
     connection_t * tmp;
     for(auto c : prog_data->connections){
-        printf("conn \n");
         pthread_join(c->tid,NULL);
         tmp = c;
         free(tmp->username);
         close(tmp->connection_socket);
         free(tmp);
     }
-    printf("gonna clear \n");
     prog_data->connections.clear();
-    printf("gonna iterate on users \n");
     for(auto u : prog_data->users){
-        printf("it time \n");
         free(u->uname);
         free(u->pass);
         free(u);
     }
-    printf("gonna clear users \n");
     prog_data->users.clear();
     close(prog_data->main_socket);
     free(prog_data);
@@ -53,7 +53,7 @@ void stop(int signum) {
  * @return int 
  */
 int thread_cleanup(connection_t* c){
-    printf("Freeing data of user : %s with tid : %d \n",c->username,c->tid);
+    printf("Freeing data of user : [%s] with tid : [%lu] \n",c->username,c->tid);
     remove_connection(c->server_data,c);
     free(c->username);
     close(c->connection_socket);
@@ -70,7 +70,7 @@ int thread_cleanup(connection_t* c){
  * @param signum 
  * @return int 
  */
-void thread_end(int signum){
-    printf("Thread %d exiting. \n",pthread_self());
+void thread_end(){
+    printf("Thread [%lu] exiting... \n",pthread_self());
     pthread_exit((void *) 0);
 }
