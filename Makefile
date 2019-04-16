@@ -1,13 +1,16 @@
 SRCDIR   = src
 BINDIR   = bin
 INCLUDES = include
-OBJS = utils.o cmd.o exit.o
+OBJS = utils.o cmd.o ftp.o exit.o 
 
 CC=g++
 CFLAGS=-Wall -Wextra -g -fno-stack-protector -pthread -z execstack  -std=gnu11 -I $(INCLUDES)/ -m32 
 DEPS = $(wildcard $(INCLUDES)/%.h)
 
-all: utils.o exit.o cmd.o $(BINDIR)/client  $(BINDIR)/server $(DEPS)
+all: utils.o exit.o ftp.o cmd.o $(BINDIR)/client  $(BINDIR)/server $(DEPS)
+
+ftp.o : $(SRCDIR)/ftp.cpp $(INCLUDES)/ftp.h
+		$(CC) -c $(CFLAGS) $< -o $@
 
 cmd.o : $(SRCDIR)/cmd.cpp $(INCLUDES)/cmd.h
 		$(CC) -c $(CFLAGS) $< -o $@ 
