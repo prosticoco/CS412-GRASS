@@ -3,7 +3,7 @@
 
 #include "grass.h"
 
-#define MAX_TOKENS 2
+#define MAX_TOKENS 5
 #define MAX_INPUT_SIZE 256
 
 int process_cmd(connection_t* curr_co);
@@ -15,6 +15,10 @@ int cmd_login(connection_t* curr_co);
 int cmd_pass(connection_t* curr_co);
 
 int cmd_ping(connection_t* curr_co);
+
+int cmd_date(connection_t* curr_co);
+
+int cmd_whoami(connection_t* curr_co);
 
 int cmd_w(connection_t* curr_co);
 

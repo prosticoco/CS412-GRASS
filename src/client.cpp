@@ -11,6 +11,7 @@
 using namespace std;
 
 static int sock=0;
+int BUFFER_READ_MAX_SIZE = 1024;
 
 
 void error(char *msg)
@@ -82,9 +83,9 @@ bool chat(int sock, char* buffer) {
         n = write(sock,buffer,strlen(buffer));
         if (n < 0) 
             cout <<"ERROR writing to socket" << endl;
-        bzero(buffer,256);
+        bzero(buffer,BUFFER_READ_MAX_SIZE);
         
-        n = read(sock,buffer,255);
+        n = read(sock,buffer,BUFFER_READ_MAX_SIZE);
         if (n < 0) {
             error("ERROR reading from socket");
         }
