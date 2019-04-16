@@ -7,7 +7,8 @@
     ERROR_SOCKET,
     ERROR_NULL,
     ERROR_CMD,
-    ERROR_TOKEN
+    ERROR_TOKEN,
+    ERROR_IO
 };
 
 
