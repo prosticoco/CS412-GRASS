@@ -38,9 +38,10 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
         printf("Error popen on command : [%s] \n",cmd);
         return ERROR_IO;
     }
-    char * err = fgets(output,size,out);
-    if(!err){
-        printf("Error with fgets in execute_system_cmd \n");
+    size_t bytes_read = 0;
+    bytes_read = fread(output,sizeof(char),size,out);
+    if(bytes_read <= 0){
+        printf("Error with read in execute_system_cmd \n");
         fclose(out);
         return ERROR_IO;
     }
