@@ -36,6 +36,8 @@ int init_connection(int socket,connection_t* co,data_t* data);
 
 int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
     printf("Initializing new connection... \n");
+    tmp->ftp_socket = -1;
+    tmp->ftp_port = -1;
     tmp->auth = false;
     tmp->connection_socket = new_sockfd;
     tmp->curr_args = NULL;

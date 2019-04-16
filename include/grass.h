@@ -64,6 +64,8 @@ struct connection_t{
     pthread_t tid;
     data_t * server_data;
     int connection_socket;
+    int ftp_socket;
+    int ftp_port;
     char * username;
     bool auth;
     bool ready_for_check;
