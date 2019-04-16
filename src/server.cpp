@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <signal.h>
 #include <pthread.h>
+#include <errno.h>
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
@@ -112,7 +113,7 @@ int init_server(data_t * data){
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(portno);
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    // bin the server's address and port to the socket
+    // bind the server's address and port to the socket
     if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
         printf("ERROR on binding\n");
         return -1;
