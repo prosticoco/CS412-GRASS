@@ -69,7 +69,6 @@ void *handle_client(void* ptr){
         if(client->exit) {
             break;
         }
-
         // count the number of bytes read from socket
         ssize_t b;
         bzero(input,sizeof(input));
