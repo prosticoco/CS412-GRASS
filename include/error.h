@@ -8,7 +8,8 @@
     ERROR_NULL,
     ERROR_CMD,
     ERROR_TOKEN,
-    ERROR_IO
+    ERROR_IO,
+    ERROR_BIND
 };
 
 
