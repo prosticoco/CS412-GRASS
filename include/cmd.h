@@ -20,4 +20,6 @@ int cmd_w(connection_t* curr_co);
 
 int cmd_logout(connection_t* curr_co);
 
+int cmd_exit(connection_t* curr_co);
+
 #endif

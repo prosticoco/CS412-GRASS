@@ -50,8 +50,6 @@ typedef struct {
 
 }user_list_t;
 
-
-
 typedef struct{
     pthread_t main_tid;
     int main_socket;
@@ -69,6 +67,7 @@ struct connection_t{
     char * username;
     bool auth;
     bool ready_for_check;
+    bool exit;
     char * curr_in;
     char * curr_out;
     char (*curr_args)[MAX_ARG_SIZE];

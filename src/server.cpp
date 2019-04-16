@@ -42,6 +42,7 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
     tmp->ready_for_check = false;
     tmp->server_data = data;
     tmp->username = (char *) malloc(MAX_USERNAME_SIZE);
+    tmp->exit = false;
     int random = rand() % 1000;
     sprintf(tmp->username,"Unknown_user_%d",random);
     tmp->curr_in = NULL;
@@ -65,12 +66,16 @@ void *handle_client(void* ptr){
     char output[BUFFER_MAX_SIZE];
     printf("Connection started for user : [%s] \n",client->username);
     while(1){
+        if(client->exit) {
+            break;
+        }
+
         // count the number of bytes read from socket
         ssize_t b;
         bzero(input,sizeof(input));
         bzero(output,sizeof(output));
         b = read(client->connection_socket,input,sizeof(input));
-        if(!b || (strncmp("exit",input,4) == 0)){
+        if(!b){
             printf("Client on socket : %d exiting \n",client->connection_socket);
             break;
         }

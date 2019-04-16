@@ -3,14 +3,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 5
+#define NUM_COMMANDS 6
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
     {"pass",1,false,cmd_pass},
     {"ping",1,false,cmd_ping},
     {"w",0, true, cmd_w},
-    {"logout",0,false,cmd_logout}
+    {"logout",0,true,cmd_logout},
+    {"exit",0,false, cmd_exit}
 };
 
 /**
@@ -123,6 +124,12 @@ int cmd_ping(connection_t* curr_co) {
 int cmd_logout(connection_t* curr_co) {
     curr_co->auth = false;
     strncpy(curr_co->curr_out, "User is logged out", MAX_ARG_SIZE);
+    return 0;
+}
+
+int cmd_exit(connection_t* curr_co) {
+    curr_co->exit = true;
+    strncpy(curr_co->curr_out, "", MAX_ARG_SIZE);
     return 0;
 }
 

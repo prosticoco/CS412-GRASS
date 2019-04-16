@@ -75,7 +75,7 @@ bool chat(int sock, char* buffer) {
     int n;
      //actual chat
     while(!feof(stdin) && !ferror(stdin)) {
-        printf("Please enter the message: ");
+        printf(">> ");
         bzero(buffer,256);
         if(feof(stdin) || ferror(stdin)) return false;
         fgets(buffer,255,stdin);
@@ -89,10 +89,10 @@ bool chat(int sock, char* buffer) {
             error("ERROR reading from socket");
         }
         if(n == 0) {
-            printf("Disconnection\n");
+            printf("Good bye, booooy\n");
             return false;
         }
-        printf("Server response : %s\n",buffer);
+        printf("%s\n",buffer);
         
     }
 
