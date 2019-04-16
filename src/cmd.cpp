@@ -3,11 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 2
+#define NUM_COMMANDS 4
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
-    {"pass",1,false,cmd_pass}
+    {"pass",1,false,cmd_pass},
+    {"ping",1,false,cmd_ping},
+    {"w",0, true, cmd_w}
 };
 
 /**
@@ -37,7 +39,17 @@ int process_cmd(connection_t * curr_co){
             found = true;
             //todo initialize data structure to pass to cmd function
             curr_co->curr_args = &splitted_cmd[1];
-            err = cmds[i].fct(curr_co); 
+
+            //todo check auth if needed
+            if( cmds[i].authent) {
+                if(curr_co->auth) {
+                    err = cmds[i].fct(curr_co); 
+                } else {
+                    strncpy(curr_co->curr_out,"Authentication required \n", MAX_ARG_SIZE);
+                }
+            } else {
+                err = cmds[i].fct(curr_co); 
+            }
         }
         i++;
     }
@@ -75,7 +87,7 @@ int cmd_pass(connection_t * curr_co){
         if( strncmp(user->uname, curr_co->username, strlen(user->uname)) == 0) {
             if(strncmp(curr_co->curr_args[0], user->pass,  strlen(user->pass))== 0) {
                 curr_co->auth = true;
-                strcpy(curr_co->curr_out,"Authentication successful \n");
+                strncpy(curr_co->curr_out,"Authentication successful \n", MAX_ARG_SIZE);
                 found = true;
                 break;
             }
@@ -86,6 +98,24 @@ int cmd_pass(connection_t * curr_co){
         strcpy(curr_co->curr_out,"Invalid credentials \n");     
     }
     curr_co->ready_for_check = false;
+    return 0;
+}
+
+int cmd_w(connection_t* curr_co) {
+
+    // there is always at least one user authentified
+    std::cout << "Command W" << std::endl;
+    for (auto co : curr_co->server_data->connections) {
+        if (co->auth) {
+            std::cout << "User authentified : " << co->username << std::endl;        
+            strncat(curr_co->curr_out, co->username, MAX_ARG_SIZE);
+            strcat(curr_co->curr_out, " ");
+        }
+    }
+    return 0;
+}
+
+int cmd_ping(connection_t* curr_co) {
     return 0;
 }
 
