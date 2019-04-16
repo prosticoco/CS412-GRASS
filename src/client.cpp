@@ -27,7 +27,7 @@ void ctrl_c(int socket){
     write(sock, buff, 5); 
 
     close(sock);
-    exit;
+    exit(0);
 }
 
 int init(int& sock, int& portno,char** argv) {
@@ -85,8 +85,13 @@ bool chat(int sock, char* buffer) {
         bzero(buffer,256);
         
         n = read(sock,buffer,255);
-        if (n < 0) error("ERROR reading from socket");
-        if(n == 0) return false;
+        if (n < 0) {
+            error("ERROR reading from socket");
+        }
+        if(n == 0) {
+            printf("Disconnection\n");
+            return false;
+        }
         printf("Server response : %s\n",buffer);
         
     }
@@ -134,8 +139,9 @@ int main(int argc, char **argv) {
 
     char buffer[1024] = {0};
 
-    while(true ) {
-        chat(sock, buffer);
+    bool running = true;
+    while(running ) {
+        running = chat(sock, buffer);
     }   
     close(sock); 
 
