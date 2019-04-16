@@ -3,13 +3,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 4
+#define NUM_COMMANDS 5
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
     {"pass",1,false,cmd_pass},
     {"ping",1,false,cmd_ping},
-    {"w",0, true, cmd_w}
+    {"w",0, true, cmd_w},
+    {"logout",0,false,cmd_logout}
 };
 
 /**
@@ -45,7 +46,7 @@ int process_cmd(connection_t * curr_co){
                 if(curr_co->auth) {
                     err = cmds[i].fct(curr_co); 
                 } else {
-                    strncpy(curr_co->curr_out,"Authentication required \n", MAX_ARG_SIZE);
+                    strncpy(curr_co->curr_out,"Authentication required", MAX_ARG_SIZE);
                 }
             } else {
                 err = cmds[i].fct(curr_co); 
@@ -69,17 +70,17 @@ int cmd_login(connection_t* curr_co){
     printf("Logging in \n");
     curr_co->ready_for_check = true;
     strncpy(curr_co->username,curr_co->curr_args[0],MAX_USERNAME_SIZE);
-    strcpy(curr_co->curr_out,"Please provide your password \n");
+    strcpy(curr_co->curr_out,"Please provide your password");
     return 0;
 }
 
 int cmd_pass(connection_t * curr_co){
     if(curr_co->auth) {
-        strcpy(curr_co->curr_out,"User already authentified \n");
+        strncpy(curr_co->curr_out,"User already authentified", MAX_ARG_SIZE);
         return 0;
     }
     if(!(curr_co->ready_for_check)){
-        strcpy(curr_co->curr_out,"Please provide a username first \n");
+        strncpy(curr_co->curr_out,"Please provide a username first", MAX_ARG_SIZE);
         return 0;
     }    
     bool found = false;
@@ -87,7 +88,7 @@ int cmd_pass(connection_t * curr_co){
         if( strncmp(user->uname, curr_co->username, strlen(user->uname)) == 0) {
             if(strncmp(curr_co->curr_args[0], user->pass,  strlen(user->pass))== 0) {
                 curr_co->auth = true;
-                strncpy(curr_co->curr_out,"Authentication successful \n", MAX_ARG_SIZE);
+                strncpy(curr_co->curr_out,"Authentication successful", MAX_ARG_SIZE);
                 found = true;
                 break;
             }
@@ -95,7 +96,7 @@ int cmd_pass(connection_t * curr_co){
         
     }
     if(!found) {
-        strcpy(curr_co->curr_out,"Invalid credentials \n");     
+        strcpy(curr_co->curr_out,"Invalid credentials");     
     }
     curr_co->ready_for_check = false;
     return 0;
@@ -116,6 +117,12 @@ int cmd_w(connection_t* curr_co) {
 }
 
 int cmd_ping(connection_t* curr_co) {
+    return 0;
+}
+
+int cmd_logout(connection_t* curr_co) {
+    curr_co->auth = false;
+    strncpy(curr_co->curr_out, "User is logged out", MAX_ARG_SIZE);
     return 0;
 }
 
