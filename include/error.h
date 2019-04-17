@@ -9,7 +9,10 @@
     ERROR_CMD,
     ERROR_TOKEN,
     ERROR_IO,
-    ERROR_BIND
+    ERROR_BIND,
+    ERROR_SEND,
+    ERROR_RECV,
+    ERROR_FILESIZE
 };
 
 
