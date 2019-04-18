@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
@@ -10,15 +12,28 @@
 #include <errno.h>
 #include <sys/sendfile.h>
 
+#include "ftp.h"
 #include "error.h"
 #include "grass.h"
 
 #define CHUNK_SIZE 256
-
-
-
+#define MAX_CO_FTP 1
 
 int setup_ftp_connection_server(connection_t* client){
+    int error = 0;
+    int portno = 0;
+    int sock = -1;
+    error = setup_server_co(&portno,&sock,true,MAX_CO_FTP);
+    if(error){
+        printf("Error setup_server_co()\n");
+        return error;
+    }
+    client->ftp_port = portno;
+    client->ftp_socket = sock;
+    return 0;
+}
+
+int setup_server_co(int * portno,int * sock,bool random_port,unsigned int max_co){
     int sockfd = -1; 
     struct sockaddr_in serv_addr;
     // open the server's socket
@@ -27,18 +42,22 @@ int setup_ftp_connection_server(connection_t* client){
         printf("ERROR opening socket in ftp_connection \n");
         return ERROR_SOCKET;
     }
-    client->ftp_socket = sockfd;
+    *sock =  sockfd;
     // initialize the server's address sructure
     bzero((char*) &serv_addr,sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = 0;
+    if(random_port){
+        serv_addr.sin_port = 0;
+    }else{
+        serv_addr.sin_port = htons(*portno);
+    }
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     // bind the server's address and port to the socket
     if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
         printf("ERROR on binding\n");
         return ERROR_BIND;
     }
-    if(listen(sockfd,1) != 0){
+    if(listen(sockfd,max_co) != 0){
         printf("ERROR listening failed\n");
         return ERROR_NETWORK;
     }
@@ -49,8 +68,33 @@ int setup_ftp_connection_server(connection_t* client){
         printf("Error : getsockname \n");
         return ERROR_NETWORK;
     }
-    printf("portno : %d \n",serv_addr.sin_port);
-    client->ftp_port = serv_addr.sin_port;
+    *portno = ntohs(serv_addr.sin_port);
+    printf("Port number is : %d \n",*portno);
+    return 0;
+}
+
+int setup_client_co(char * ip,int portno,int* sock){
+    struct sockaddr_in serv_addr; 
+    int sockfd = -1;
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){ 
+        printf("\n Socket creation error \n"); 
+        return ERROR_SOCKET; 
+    } 
+    memset(&serv_addr, '0', sizeof(serv_addr)); 
+    serv_addr.sin_family = AF_INET; 
+    serv_addr.sin_port = htons(portno); 
+       
+    // Convert IPv4 and IPv6 addresses from text to binary form 
+    if(inet_pton(AF_INET, ip, &serv_addr.sin_addr)<=0){ 
+        printf("\nInvalid address/ Address not supported \n"); 
+        return ERROR_NETWORK; 
+    } 
+   
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){ 
+        printf("Connection Failed \n"); 
+        return ERROR_NETWORK; 
+    }
+    *sock = sockfd;
     return 0;
 }
 
@@ -98,6 +142,9 @@ int file_recv(int sock,int fd, size_t size){
     if(rec < 0){
         printf("Error recv() \n");
         return ERROR_RECV;
+    }
+    if(total_recv != size){
+        return ERROR_FILESIZE;
     }
     return total_recv;
 }

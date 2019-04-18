@@ -18,9 +18,11 @@
 #include "exit.h"
 #include "grass.h"
 #include "utils.h"
+#include "ftp.h"
 
 
 #define BUFFER_MAX_SIZE 256
+#define MAX_CONNECTIONS 5
 
 
 char port[7] = "31337";
@@ -105,8 +107,16 @@ void *handle_client(void* ptr){
  * @param data pointer to the program data
  */
 int init_server(data_t * data){
+    int error = 0;
     int sockfd = -1;
-    int portno = data->main_portno;   
+    int portno = data->main_portno;
+    error = setup_server_co(&portno,&sockfd,false,MAX_CONNECTIONS);
+    if(error){
+        printf("Error setup_server_co() \n");
+        return error;
+    }
+    data->main_socket = sockfd;
+    /**
     struct sockaddr_in serv_addr;
     // open the server's socket
     sockfd = socket(AF_INET,SOCK_STREAM,0);
@@ -130,6 +140,7 @@ int init_server(data_t * data){
         printf("ERROR listening failed\n");
         return -1;
     }
+    **/
     return 0;  
 }
 

@@ -1,4 +1,4 @@
-#include <grass.h> 
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -7,6 +7,9 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <signal.h>
+#include "ftp.h"
+#include "grass.h" 
+#include "error.h"
 
 using namespace std;
 
@@ -42,9 +45,16 @@ int init(int& sock, int& portno,char** argv) {
 
     //initialise connection
     portno = atoi(argv[2]);
-    char ip_buffer[20];
-    strncpy(ip_buffer, argv[1], 18);
-
+    //char ip_buffer[20];
+    //strncpy(ip_buffer, argv[1], 18);
+    int error = 0;
+    error = setup_client_co(argv[1],portno,&sock);
+    if(error < 0){
+        printf("Error setting up client \n");
+        return error;
+    }
+    return 0;
+    /**
     struct sockaddr_in serv_addr; 
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
@@ -70,6 +80,7 @@ int init(int& sock, int& portno,char** argv) {
         printf("Connection Failed \n"); 
         return -1; 
     }
+    **/
 }
 
 bool chat(int sock, char* buffer) {
