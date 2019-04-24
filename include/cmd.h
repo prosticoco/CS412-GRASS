@@ -3,8 +3,7 @@
 
 #include "grass.h"
 
-#define MAX_TOKENS 5
-#define MAX_INPUT_SIZE 256
+
 
 int process_cmd(connection_t* curr_co);
 

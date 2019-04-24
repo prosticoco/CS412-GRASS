@@ -22,6 +22,10 @@
 #define MAX_USERNAME_SIZE 32
 #define MAX_PASSWORD_SIZE 32
 #define MAX_THREAD_NUMS 16
+#define MAX_TOKENS 5
+#define MAX_INPUT_SIZE 256
+#define MAX_OUTPUT_SIZE 512
+#define MAX_LINE_SIZE 128
 
 struct connection_t;
 typedef struct connection_t connection_t;

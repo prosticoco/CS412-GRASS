@@ -130,12 +130,12 @@ int cmd_w(connection_t* curr_co) {
 int cmd_ping(connection_t* curr_co) {
 
     char cmd[MAX_INPUT_SIZE+1];
+    bzero(cmd,sizeof(cmd));
     sprintf(cmd, "ping %s -c 1", curr_co->curr_args[0]);
     printf("%s\n", curr_co->curr_args[0]);
     char out[MAX_INPUT_SIZE];
+    bzero(out,sizeof(out));
     execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
-    printf("%s\n", out);
-    
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
 
     return 0;

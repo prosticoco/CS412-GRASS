@@ -8,6 +8,7 @@
 #include <iterator>
 #include <iostream>
 #include <algorithm>
+#include <string.h>
 #include "utils.h"
 #include "grass.h"
 #include "error.h"
@@ -33,18 +34,37 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
         printf("Error NULL argument in execute_system_cmd \n");
         return ERROR_NULL;
     }
-    FILE*  out = popen(cmd,"r");
+    // add this so that the output of popen prints out any error
+    char * error_msg = " 2>&1";
+    char command[MAX_INPUT_SIZE];
+    memset(command,0,sizeof(command));
+    strncat(command,cmd,strlen(cmd));
+    strncat(command,error_msg,strlen(error_msg));
+    FILE*  out = popen(command,"r");
     if(!out){
         printf("Error popen on command : [%s] \n",cmd);
         return ERROR_IO;
     }
-    size_t bytes_read = 0;
-    bytes_read = fread(output,sizeof(char),size,out);
-    if(bytes_read <= 0){
-        printf("Error with read in execute_system_cmd \n");
-        fclose(out);
+    char * error= NULL;
+    char tmp[MAX_OUTPUT_SIZE];
+    bzero(tmp,MAX_OUTPUT_SIZE);
+    size_t total = 0;
+    total = fread(tmp,1,MAX_OUTPUT_SIZE-1,out);
+    if(total == 0){
+        printf("Test : total is zero \n");
+    }
+    if(total < 0){
+        printf("Error reading pipe \n");
+        pclose(out);
         return ERROR_IO;
     }
-    fclose(out);
+    output[total] = '\0';
+    sprintf(output,tmp);
+    if(output[strlen(output)-1] == '\n'){
+        output[strlen(output)-1] = '\0';
+    }
+    printf("output: [%s]\n",output);
+    //int error = pclose(out)/256;
+    pclose(out);
     return 0;
 }
