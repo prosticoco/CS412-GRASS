@@ -1,7 +1,11 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-
+/**
+ * @brief list of all different error values we  use
+ * to handle errors in the project.
+ * 
+ */
  enum{
     ERROR_NETWORK= -128,
     ERROR_SOCKET,
