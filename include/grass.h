@@ -22,6 +22,8 @@
 #define MAX_USERNAME_SIZE 32
 #define MAX_PASSWORD_SIZE 32
 #define MAX_THREAD_NUMS 16
+#define MAX_PATH_SIZE 128
+#define ROOT_DIR_NAME "/root"
 
 struct connection_t;
 typedef struct connection_t connection_t;
@@ -72,6 +74,8 @@ struct connection_t{
     bool exit;
     char * curr_in;
     char * curr_out;
+    char pwd[MAX_PATH_SIZE];
+    char root[MAX_PATH_SIZE];
     char (*curr_args)[MAX_ARG_SIZE];
 };
 

@@ -51,6 +51,11 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
     sprintf(tmp->username,"Unknown_user_%d",random);
     tmp->curr_in = NULL;
     tmp->curr_out = NULL;
+    // initialise root directory
+    check_dir(tmp);
+    printf("Root diretory : %s\n", tmp->root);
+    printf("Working directory : %s\n", tmp->pwd);
+    
     add_connection(data,tmp);
     int ret = pthread_create(&(tmp->tid),NULL,handle_client,(void *)tmp);
     return ret;
@@ -91,7 +96,7 @@ void *handle_client(void* ptr){
             break;
         }
         b = write(client->connection_socket,client->curr_out,strlen(client->curr_out));
-        if(!b){
+        if(b<0){
             printf("Connection Error \n");
             break;
         }
