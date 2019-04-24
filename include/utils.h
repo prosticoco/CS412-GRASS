@@ -34,4 +34,12 @@ void remove_connection(data_t * data, connection_t * connection);
  */
 int execute_system_cmd(const char *cmd,char* output,size_t size);
 
+/**
+ * @brief checks if root directory is present, if it is we reset it, if it is not we create it
+ * 
+ * @param co the conection  
+ * */
+int check_dir(connection_t* co);
+
+
 #endif

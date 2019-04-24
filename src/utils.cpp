@@ -9,6 +9,8 @@
 #include <iostream>
 #include <algorithm>
 #include <string.h>
+#include <dirent.h>
+#include <errno.h>
 #include "utils.h"
 #include "grass.h"
 #include "error.h"
@@ -67,4 +69,39 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
     //int error = pclose(out)/256;
     pclose(out);
     return 0;
+}
+
+int check_dir(connection_t* co) {
+    char cwd[MAX_PATH_SIZE];
+    char root_path[MAX_PATH_SIZE];
+    int err = 0;
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working dir: %s\n", cwd);
+        strncpy(root_path, cwd, strlen(cwd));
+    } else {
+        return -1;
+    }
+    strncat(root_path, ROOT_DIR_NAME, strlen(ROOT_DIR_NAME));
+    DIR* dir = opendir(root_path);
+    printf("Root path : %s\n", root_path);
+    
+    if (dir) {
+        /* Directory exists. */
+        closedir(dir);
+        printf("Root dir exists and is being reset\n");
+        char cmd[MAX_INPUT] = "rm -r ";
+        strcat(cmd, root_path);
+        strcat(cmd, "/*");
+        
+        err = system(cmd);
+        if(err) {
+            printf("Root reset failed\n");
+        }
+
+    }
+       
+    strncpy(co->root, root_path, MAX_PATH_SIZE);
+    strncpy(co->pwd, root_path, MAX_PATH_SIZE);
+
+
 }

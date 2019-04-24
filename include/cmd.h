@@ -25,4 +25,10 @@ int cmd_logout(connection_t* curr_co);
 
 int cmd_exit(connection_t* curr_co);
 
+int cmd_ls(connection_t* curr_co);
+
+int cmd_cd(connection_t* curr_co);
+
+int cmd_mkdir(connection_t* curr_co);
+
 #endif

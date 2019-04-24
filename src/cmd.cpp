@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 8
+#define NUM_COMMANDS 9
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
@@ -14,7 +14,8 @@ command_t cmds[NUM_COMMANDS] = {
     {"whoami",0,true,cmd_whoami},
     {"w",0,true, cmd_w},
     {"logout",0,true,cmd_logout},
-    {"exit",0,false, cmd_exit}
+    {"exit",0,false, cmd_exit},
+    {"ls", 0, true, cmd_ls}
 };
 
 /**
@@ -29,6 +30,7 @@ int process_cmd(connection_t * curr_co){
         printf("Error null command or too long \n");
         return ERROR_NULL;
     }
+    std::cout << "Processing cmd" << std::endl;
     curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
@@ -45,9 +47,6 @@ int process_cmd(connection_t * curr_co){
             //todo initialize data structure to pass to cmd function
             curr_co->curr_args = &splitted_cmd[1];
             // check if args have correct length
-
-            std::cout << "Tokens : " << num_tokens << std::endl;
-            std::cout << "params required : " << cmds[i].num_params << std::endl;
             if (num_tokens - 1 != cmds[i].num_params) {
                 strncpy(curr_co->curr_out,"Invalid number of arguments", MAX_ARG_SIZE);
                 return err;
@@ -55,7 +54,8 @@ int process_cmd(connection_t * curr_co){
             //check auth if needed
             if( cmds[i].authent) {
                 if(curr_co->auth) {
-                    err = cmds[i].fct(curr_co); 
+                    err = cmds[i].fct(curr_co);
+                    printf("Return from exit\n");
                 } else {
                     strncpy(curr_co->curr_out,"Authentication required", MAX_ARG_SIZE);
                 }
@@ -160,10 +160,21 @@ int cmd_logout(connection_t* curr_co) {
 }
 
 int cmd_exit(connection_t* curr_co) {
+    printf("Exiting\n");
     curr_co->exit = true;
     strncpy(curr_co->curr_out, "", MAX_ARG_SIZE);
     return 0;
 }
+
+int cmd_ls(connection_t* curr_co) {
+    char cmd[MAX_INPUT_SIZE] = "ls -l ";
+    strncat(cmd, curr_co->pwd, strlen(curr_co->pwd));
+    char out[MAX_INPUT_SIZE];
+    execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    printf("Output : %s\n", out);
+    strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
+}
+
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;
