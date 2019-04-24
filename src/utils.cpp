@@ -76,12 +76,15 @@ int check_dir(connection_t* co) {
     char root_path[MAX_PATH_SIZE];
     int err = 0;
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working dir: %s\n", cwd);
-        strncpy(root_path, cwd, strlen(cwd));
+        printf("Current working dir: [%s]\n", cwd);
+        strncpy(root_path, cwd, MAX_PATH_SIZE);
     } else {
         return -1;
     }
+    printf("before CAT : root path : [%s] \n",root_path);
+    printf("before CAT : Root dir name : [%s] \n",ROOT_DIR_NAME);
     strncat(root_path, ROOT_DIR_NAME, strlen(ROOT_DIR_NAME));
+    printf("AFTER CAT [%s]\n",root_path);
     DIR* dir = opendir(root_path);
     printf("Root path : %s\n", root_path);
     

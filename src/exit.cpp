@@ -55,7 +55,7 @@ void stop(int signum) {
  * @param c 
  * @return int 
  */
-int thread_cleanup(connection_t* c){
+void thread_cleanup(connection_t* c){
     printf("Client : [%s] with tid : [%lu] Disconnection. \n",c->username,c->tid);
     remove_connection(c->server_data,c);
     free(c->username);

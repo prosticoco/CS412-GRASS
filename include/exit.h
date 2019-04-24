@@ -3,17 +3,27 @@
 
 #include "grass.h"
 
+/**
+ * @brief Signal handler which takes care of exiting the program in a clean way, whenever
+ * the server program is interrupted. More detailed explanation can be found in the function
+ * definition
+ * 
+ * @param signum signal number 
+ */
 void stop(int signum);
 
+/**
+ * @brief ends/exits the calling thread
+ * 
+ */
 void thread_end();
 
-int stop_threads(data_t * data);
-
-int clean_memory(data_t * data);
-
-int cleanup(data_t * data);
-
-int thread_cleanup(connection_t* cur_co);
+/**
+ * @brief cleans up all data only necessary to the calling thread and subsequently ends/exits the thread
+ * 
+ * @param cur_co pointer to the connection metadata
+ */
+void thread_cleanup(connection_t* cur_co);
 
 
 
