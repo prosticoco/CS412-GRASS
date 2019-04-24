@@ -71,17 +71,20 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
     return 0;
 }
 
-int check_dir(connection_t* co) {
+int check_dir(data_t* data) {
     char cwd[MAX_PATH_SIZE];
     char root_path[MAX_PATH_SIZE];
     int err = 0;
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("Current working dir: %s\n", cwd);
-        strncpy(root_path, cwd, strlen(cwd));
+        strncpy(root_path, cwd, MAX_PATH_SIZE);
+        strcat(root_path, "/");
+        strcat(root_path, data->base_dir.c_str());
     } else {
         return -1;
     }
-    strncat(root_path, ROOT_DIR_NAME, strlen(ROOT_DIR_NAME));
+    strncat(root_path, ROOT_DIR_NAME, MAX_PATH_SIZE);
+
     DIR* dir = opendir(root_path);
     printf("Root path : %s\n", root_path);
     
@@ -97,11 +100,13 @@ int check_dir(connection_t* co) {
         if(err) {
             printf("Root reset failed\n");
         }
-
+    } else {
+        char cmd[MAX_INPUT_SIZE]= "mkdir ";
+        strcat(cmd, root_path);
+        system(cmd);
+        //todo handle error
     }
-       
-    strncpy(co->root, root_path, MAX_PATH_SIZE);
-    strncpy(co->pwd, root_path, MAX_PATH_SIZE);
 
+    strncpy(data->root_path, root_path, MAX_INPUT_SIZE);
 
 }

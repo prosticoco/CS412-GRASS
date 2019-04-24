@@ -52,9 +52,9 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
     tmp->curr_in = NULL;
     tmp->curr_out = NULL;
     // initialise root directory
-    check_dir(tmp);
-    printf("Root diretory : %s\n", tmp->root);
-    printf("Working directory : %s\n", tmp->pwd);
+    strncpy(tmp->pwd, data->root_path, MAX_PATH_SIZE);
+    strncpy(tmp->root, data->root_path, MAX_PATH_SIZE);
+    printf("Connection PWD : %s\n", tmp->pwd);
     
     add_connection(data,tmp);
     int ret = pthread_create(&(tmp->tid),NULL,handle_client,(void *)tmp);
@@ -121,6 +121,7 @@ int init_server(data_t * data){
         return error;
     }
     data->main_socket = sockfd;
+    check_dir(data);
     /**
     struct sockaddr_in serv_addr;
     // open the server's socket

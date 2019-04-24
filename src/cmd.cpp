@@ -179,15 +179,23 @@ int cmd_ls(connection_t* curr_co) {
 
 int cmd_mkdir(connection_t* curr_co) {
     char cmd[MAX_INPUT_SIZE] = "mkdir ";
-    strncat(cmd, curr_co->pwd, strlen(curr_co->pwd));
-    strcat(cmd, "/" );
-    strncat(cmd, curr_co->curr_args[0], strlen(curr_co->curr_args[0]));
-    
+    char dir_path[MAX_PATH_SIZE];
+    strncat(dir_path, curr_co->pwd, strlen(curr_co->pwd));
+    strcat(dir_path, "/" );
+    strncat(dir_path, curr_co->curr_args[0], strlen(curr_co->curr_args[0]));
+    strcat(cmd, dir_path);
+
     char out[MAX_INPUT_SIZE];
     printf("Mkdir command : %s\n", cmd);
     execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     printf("Output : %s\n", out);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
+
+    //handle permissions
+    char chmod[MAX_INPUT_SIZE] = "chmod 777 ";
+    strcat(chmod, dir_path);
+    execute_system_cmd(chmod, out, MAX_INPUT_SIZE);
+    
     return 0;
 }
 
@@ -198,16 +206,8 @@ int cmd_cd(connection_t* curr_co) {
     strncat(nwd, curr_co->pwd, strlen(curr_co->pwd));
     strcat(nwd, "/" );
     strncat(nwd, curr_co->curr_args[0], strlen(curr_co->curr_args[0]));
-    strncat(cmd , nwd, strlen(nwd));
-    char out[MAX_INPUT_SIZE];
-    printf("Next working directory : %s\n", nwd);
-    printf("Cd command : %s\n", cmd);
-    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
-    if(!err) {
-        strncpy(curr_co->pwd, nwd, strlen(nwd));
-    }
-    printf("Output : %s\n", out);
-    strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
+    strncpy(curr_co->pwd, nwd, MAX_PATH_SIZE);
+    strncpy(curr_co->curr_out,nwd, MAX_PATH_SIZE);
     return 0;
 }
 

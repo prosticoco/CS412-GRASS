@@ -64,6 +64,7 @@ typedef struct{
     std::vector<user_t*> users;
     std::vector<connection_t *> connections;
     pthread_mutex_t vector_protect;
+    char root_path[MAX_PATH_SIZE];
 }data_t;
 
 struct connection_t{

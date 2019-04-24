@@ -37,9 +37,9 @@ int execute_system_cmd(const char *cmd,char* output,size_t size);
 /**
  * @brief checks if root directory is present, if it is we reset it, if it is not we create it
  * 
- * @param co the conection  
+ * @param data the server data  
  * */
-int check_dir(connection_t* co);
+int check_dir(data_t* data);
 
 
 #endif
