@@ -22,8 +22,15 @@
 #define MAX_USERNAME_SIZE 32
 #define MAX_PASSWORD_SIZE 32
 #define MAX_THREAD_NUMS 16
+<<<<<<< HEAD
+#define MAX_TOKENS 5
+#define MAX_INPUT_SIZE 256
+#define MAX_OUTPUT_SIZE 512
+#define MAX_LINE_SIZE 128
+=======
 #define MAX_PATH_SIZE 128
 #define ROOT_DIR_NAME "/root"
+>>>>>>> 1e22b4adaa68499df35a1380ad9126d22600d7fb
 
 struct connection_t;
 typedef struct connection_t connection_t;
