@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 9
+#define NUM_COMMANDS 11
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
@@ -15,7 +15,9 @@ command_t cmds[NUM_COMMANDS] = {
     {"w",0,true, cmd_w},
     {"logout",0,true,cmd_logout},
     {"exit",0,false, cmd_exit},
-    {"ls", 0, true, cmd_ls}
+    {"ls", 0, true, cmd_ls},
+    {"mkdir", 1, true, cmd_mkdir},
+    {"cd", 1, true, cmd_cd}
 };
 
 /**
@@ -55,7 +57,6 @@ int process_cmd(connection_t * curr_co){
             if( cmds[i].authent) {
                 if(curr_co->auth) {
                     err = cmds[i].fct(curr_co);
-                    printf("Return from exit\n");
                 } else {
                     strncpy(curr_co->curr_out,"Authentication required", MAX_ARG_SIZE);
                 }
@@ -173,6 +174,41 @@ int cmd_ls(connection_t* curr_co) {
     execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     printf("Output : %s\n", out);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
+    return 0;
+}
+
+int cmd_mkdir(connection_t* curr_co) {
+    char cmd[MAX_INPUT_SIZE] = "mkdir ";
+    strncat(cmd, curr_co->pwd, strlen(curr_co->pwd));
+    strcat(cmd, "/" );
+    strncat(cmd, curr_co->curr_args[0], strlen(curr_co->curr_args[0]));
+    
+    char out[MAX_INPUT_SIZE];
+    printf("Mkdir command : %s\n", cmd);
+    execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    printf("Output : %s\n", out);
+    strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
+    return 0;
+}
+
+int cmd_cd(connection_t* curr_co) {
+    char cmd[MAX_INPUT_SIZE] = "cd ";
+    char nwd[MAX_PATH_SIZE];
+
+    strncat(nwd, curr_co->pwd, strlen(curr_co->pwd));
+    strcat(nwd, "/" );
+    strncat(nwd, curr_co->curr_args[0], strlen(curr_co->curr_args[0]));
+    strncat(cmd , nwd, strlen(nwd));
+    char out[MAX_INPUT_SIZE];
+    printf("Next working directory : %s\n", nwd);
+    printf("Cd command : %s\n", cmd);
+    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    if(!err) {
+        strncpy(curr_co->pwd, nwd, strlen(nwd));
+    }
+    printf("Output : %s\n", out);
+    strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
+    return 0;
 }
 
 
