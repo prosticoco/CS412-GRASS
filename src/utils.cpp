@@ -14,6 +14,7 @@
 #include "utils.h"
 #include "grass.h"
 #include "error.h"
+#include "path.h"
 
 
 void add_connection(data_t * data, connection_t * connection){
@@ -52,9 +53,9 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
     bzero(tmp,MAX_OUTPUT_SIZE);
     size_t total = 0;
     total = fread(tmp,1,MAX_OUTPUT_SIZE-1,out);
-    if(total == 0){
-        printf("Test : total is zero \n");
-    }
+    // if(total == 0){
+    //     printf("Test : total is zero \n");
+    // }
     if(total < 0){
         printf("Error reading pipe \n");
         pclose(out);
@@ -65,7 +66,6 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
     if(output[strlen(output)-1] == '\n'){
         output[strlen(output)-1] = '\0';
     }
-    printf("output: [%s]\n",output);
     //int error = pclose(out)/256;
     pclose(out);
     return 0;
@@ -108,5 +108,9 @@ int check_dir(data_t* data) {
     }
 
     strncpy(data->root_path, root_path, MAX_INPUT_SIZE);
+    Node* root = new Node();
+    root->setFolderName(ROOT);
+    data->root = root;
+    
 
 }

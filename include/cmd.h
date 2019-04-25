@@ -30,6 +30,15 @@ int process_cmd(connection_t* curr_co);
 int tokenize_cmd(char* cmd,char (*out)[MAX_ARG_SIZE]);
 
 /**
+ * @brief Tokenizes an input according to '/' into an array of character-arrays
+ * 
+ * @param path the input command to tokenize
+ * @param out the prepared array which will contain the tokens
+ * @return int returns the number of tokens
+ */
+int tokenize_path(char* path, char (*out)[MAX_FOLDER_NAME_SIZE]);
+
+/**
  * @brief function which performs the login command
  * 
  * @param curr_co pointer to the metadata of the connection 
