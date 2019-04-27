@@ -63,6 +63,8 @@ bool Node::addChildAt(Node* child, char* parent) {
 Node* Node::checkName(char * name) {
 
     for(auto child : children) {
+        printf("Comparing given: [%s] with node:[%s]\n", name, child->getFolderName()); 
+
         if(child->checkNameOnce(name)) {
             return child;
         }
@@ -70,7 +72,7 @@ Node* Node::checkName(char * name) {
     return NULL;
 }
 
-bool Node::checkNameOnce(char * name) {    
+bool Node::checkNameOnce(char * name) {   
     if(strncmp(folder_name, name, strlen(name))==0 ) {
         return true;
     } else {
