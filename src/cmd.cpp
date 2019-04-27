@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 11
+#define NUM_COMMANDS 13
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
@@ -16,8 +16,10 @@ command_t cmds[NUM_COMMANDS] = {
     {"logout",0,true,cmd_logout},
     {"exit",0,false, cmd_exit},
     {"ls", 0, true, cmd_ls},
-    {"mkdir", 1, false, cmd_mkdir}, 
-    {"cd", 1, false, cmd_cd}
+    {"mkdir", 1, true, cmd_mkdir}, 
+    {"cd", 1, true, cmd_cd},
+    {"get",1,true,cmd_get},
+    {"put",2,true,cmd_put}
 };
 
 /**
@@ -300,6 +302,18 @@ int cmd_cd(connection_t* curr_co) {
     strcpy(out, "pwd : ");
     strncpy(out, buf, MAX_PATH_SIZE);
     strncpy(curr_co->curr_out, out, MAX_PATH_SIZE);
+    return 0;
+}
+
+
+int cmd_put(connection_t* curr_co){
+
+}
+
+int cmd_get(connection_t* curr_co){
+    int error = 0;
+
+    //curr_co->pwd
     return 0;
 }
 
