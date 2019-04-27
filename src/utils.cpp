@@ -52,6 +52,7 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
     bzero(tmp,MAX_OUTPUT_SIZE);
     size_t total = 0;
     total = fread(tmp,1,MAX_OUTPUT_SIZE-1,out);
+    printf("Total is %d \n",total);
     if(total == 0){
         printf("Test : total is zero \n");
     }
@@ -66,8 +67,8 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
         output[strlen(output)-1] = '\0';
     }
     printf("output: [%s]\n",output);
-    //int error = pclose(out)/256;
-    pclose(out);
+    int error_code = pclose(out)/256;
+    printf("Error code is %d \n",error_code);
     return 0;
 }
 

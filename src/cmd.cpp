@@ -190,11 +190,6 @@ int cmd_mkdir(connection_t* curr_co) {
     execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     printf("Output : %s\n", out);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
-
-    //handle permissions
-    char chmod[MAX_INPUT_SIZE] = "chmod 777 ";
-    strcat(chmod, dir_path);
-    execute_system_cmd(chmod, out, MAX_INPUT_SIZE);
     
     return 0;
 }
