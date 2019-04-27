@@ -87,7 +87,7 @@ bool chat(int sock, char* buffer) {
     int n;
      //actual chat
     while(!feof(stdin) && !ferror(stdin)) {
-        printf(">> ");
+        cout << ">> ";
         bzero(buffer,256);
         if(feof(stdin) || ferror(stdin)) return false;
         fgets(buffer,255,stdin);
@@ -95,7 +95,6 @@ bool chat(int sock, char* buffer) {
         if (n < 0) 
             cout <<"ERROR writing to socket" << endl;
         bzero(buffer,BUFFER_READ_MAX_SIZE);
-        
         n = read(sock,buffer,BUFFER_READ_MAX_SIZE);
         if (n < 0) {
             error("ERROR reading from socket");

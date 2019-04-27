@@ -17,17 +17,20 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <vector>
+#include "path.h"
 
 #define MAX_ARG_SIZE 32
 #define MAX_USERNAME_SIZE 32
 #define MAX_PASSWORD_SIZE 32
 #define MAX_THREAD_NUMS 16
 #define MAX_TOKENS 5
+#define MAX_TOKENS_PATH 15
 #define MAX_INPUT_SIZE 256
 #define MAX_OUTPUT_SIZE 512
 #define MAX_LINE_SIZE 128
 #define MAX_PATH_SIZE 128
 #define ROOT_DIR_NAME "/root"
+#define ROOT "root"
 
 struct connection_t;
 typedef struct connection_t connection_t;
@@ -65,6 +68,7 @@ typedef struct{
     std::vector<connection_t *> connections;
     pthread_mutex_t vector_protect;
     char root_path[MAX_PATH_SIZE];
+    Node* root;
 }data_t;
 
 struct connection_t{
@@ -79,9 +83,12 @@ struct connection_t{
     bool exit;
     char * curr_in;
     char * curr_out;
+    char relative_pwd[MAX_PATH_SIZE];
     char pwd[MAX_PATH_SIZE];
     char root[MAX_PATH_SIZE];
     char (*curr_args)[MAX_ARG_SIZE];
+    Node* root_node;
+    Node* curr_node; 
 };
 
 

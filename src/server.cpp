@@ -36,7 +36,7 @@ void *handle_client(void* curr_co);
 // prototype to create a new thread for a client
 int init_connection(int socket,connection_t* co,data_t* data);
 
-int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
+int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     printf("Initializing new connection... \n");
     tmp->ftp_socket = -1;
     tmp->ftp_port = -1;
@@ -55,6 +55,8 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t * data){
     strncpy(tmp->pwd, data->root_path, MAX_PATH_SIZE);
     strncpy(tmp->root, data->root_path, MAX_PATH_SIZE);
     printf("Connection PWD : %s\n", tmp->pwd);
+    tmp->root_node = data->root;
+    tmp->curr_node = data->root;
     
     add_connection(data,tmp);
     int ret = pthread_create(&(tmp->tid),NULL,handle_client,(void *)tmp);

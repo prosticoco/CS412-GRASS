@@ -4,3 +4,4 @@
 void hijack_flow(){
 	printf("Method hijack: Accepted\n");
 }
+
