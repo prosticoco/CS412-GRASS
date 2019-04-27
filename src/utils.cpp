@@ -53,9 +53,16 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
     bzero(tmp,MAX_OUTPUT_SIZE);
     size_t total = 0;
     total = fread(tmp,1,MAX_OUTPUT_SIZE-1,out);
+<<<<<<< HEAD
+    printf("Total is %d \n",total);
+    if(total == 0){
+        printf("Test : total is zero \n");
+    }
+=======
     // if(total == 0){
     //     printf("Test : total is zero \n");
     // }
+>>>>>>> f1dc5c8381616f0e09e5d8d993f2379de3912877
     if(total < 0){
         printf("Error reading pipe \n");
         pclose(out);
@@ -66,8 +73,14 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
     if(output[strlen(output)-1] == '\n'){
         output[strlen(output)-1] = '\0';
     }
+<<<<<<< HEAD
+    printf("output: [%s]\n",output);
+    int error_code = pclose(out)/256;
+    printf("Error code is %d \n",error_code);
+=======
     //int error = pclose(out)/256;
     pclose(out);
+>>>>>>> f1dc5c8381616f0e09e5d8d993f2379de3912877
     return 0;
 }
 
