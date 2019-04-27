@@ -290,32 +290,27 @@ int cmd_cd(connection_t* curr_co) {
     char buf[MAX_PATH_SIZE];
     bzero(buf, MAX_PATH_SIZE);
     // rewrite new path
-
-    strncpy(buf,curr_no->getFolderName(), MAX_FOLDER_NAME_SIZE);
     
-    while(curr_no->getParent() != NULL) {
+    while(strncmp(curr_no->getFolderName(), ROOT,MAX_FOLDER_NAME_SIZE) != 0) {
         char tmp[MAX_PATH_SIZE];
         strncpy(tmp, buf, MAX_PATH_SIZE);
-        strncpy(buf, curr_no->getParent()->getFolderName(), MAX_FOLDER_NAME_SIZE);
-        strcat(buf, "/");
-        strncat(buf, tmp, MAX_FOLDER_NAME_SIZE);
+        if(strncmp(curr_no->getFolderName(), ROOT,MAX_FOLDER_NAME_SIZE) != 0) {
+            strncpy(buf, curr_no-> getFolderName(), MAX_FOLDER_NAME_SIZE);
+            strcat(buf, "/");
+            strncat(buf, tmp, MAX_FOLDER_NAME_SIZE);
+        }
         curr_no = curr_no->getParent();
     }
-    getcwd(new_path, MAX_PATH_SIZE); // get working dir path
-    if(strncmp(curr_co->curr_args[0], "/", 1 )==0) {
-        
-
-        if(tokens == 0) {
-            
-        }
-    }
+    
+    strncpy(new_path,curr_co->root, MAX_PATH_SIZE); 
+    
     strcat(new_path, "/");   
     strncat(new_path, buf, MAX_PATH_SIZE);
     printf("cd to %s\n", new_path);
     strncpy(curr_co->pwd, new_path, MAX_PATH_SIZE);
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
-    strcpy(out, "pwd : ");
+    strcpy(out, "pwd : /");
     strncat(out, buf, MAX_PATH_SIZE);
     strncpy(curr_co->curr_out, out, MAX_PATH_SIZE);
     return 0;
