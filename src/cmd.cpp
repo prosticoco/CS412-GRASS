@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 11
+#define NUM_COMMANDS 12
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
@@ -16,8 +16,9 @@ command_t cmds[NUM_COMMANDS] = {
     {"logout",0,true,cmd_logout},
     {"exit",0,false, cmd_exit},
     {"ls", 0, true, cmd_ls},
-    {"mkdir", 1, false, cmd_mkdir}, 
-    {"cd", 1, false, cmd_cd}
+    {"mkdir", 1, true, cmd_mkdir}, 
+    {"cd", 1, true, cmd_cd},
+    {"rm",1,true, cmd_rm}
 };
 
 /**
@@ -203,7 +204,7 @@ int cmd_mkdir(connection_t* curr_co) {
     execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     if (strlen(out) > 0) {
         //fail
-        strcpy(curr_co->curr_out, "Error : Mkdir failed to create directory");
+        strcpy(curr_co->curr_out, "Mkdir failed to create directory");
     } else {
         strcpy(curr_co->curr_out, "Creation successful");
         Node* child = new Node();
@@ -218,52 +219,56 @@ int cmd_mkdir(connection_t* curr_co) {
 }
 
 int cmd_cd(connection_t* curr_co) {
-
     printf("--- cd ---\n");
-    char nwd[MAX_PATH_SIZE];
-    bzero(nwd, MAX_PATH_SIZE);
+    if(strlen(curr_co->curr_args[0]) > MAX_PATH_SIZE) {
+        return ERROR_MAX_PATH_SIZE;
+    }
+    
+    const int base_length = strlen(curr_co->root);
+    const int FULL_PATH_SIZE = MAX_PATH_SIZE + base_length;
+    char nwd[FULL_PATH_SIZE];
+    bzero(nwd, FULL_PATH_SIZE);
 
-    char new_path[MAX_PATH_SIZE];
-    bzero(new_path, MAX_PATH_SIZE);
+    char new_path[FULL_PATH_SIZE];
+    bzero(new_path, FULL_PATH_SIZE );
     
     // check if path is valid
-    char in[MAX_PATH_SIZE];
+    char in[FULL_PATH_SIZE];
     char splitted_path[MAX_TOKENS_PATH][MAX_FOLDER_NAME_SIZE];
 
-    bzero(in, MAX_PATH_SIZE);
-    strncpy(in, curr_co->curr_args[0], MAX_PATH_SIZE);
+    bzero(in, FULL_PATH_SIZE);
+    strncpy(in, curr_co->curr_args[0], FULL_PATH_SIZE);
     int tokens = tokenize_path(in, splitted_path);
 
     if(strncmp(curr_co->curr_args[0], "/", 1 )==0) {
-        strncpy(new_path, curr_co->root, MAX_PATH_SIZE);
+        strncpy(new_path, curr_co->root, FULL_PATH_SIZE);
         curr_co->curr_node = curr_co->root_node;
         if(tokens == 0) {
             curr_co->curr_node = curr_co->root_node;
-            strncpy(curr_co->pwd, new_path, MAX_PATH_SIZE);
+            strncpy(curr_co->pwd, new_path, FULL_PATH_SIZE);
             char out[MAX_INPUT_SIZE];
             bzero(out, MAX_INPUT_SIZE);
             strcpy(out, "pwd : /");
-            strncpy(curr_co->curr_out, out, MAX_PATH_SIZE);
+            strncpy(curr_co->curr_out, out, MAX_OUTPUT_SIZE);
             return 0;
         }
     } else {
-        strncpy(new_path, curr_co->pwd, MAX_PATH_SIZE);
-
+        strncpy(new_path, curr_co->pwd, FULL_PATH_SIZE);
     }
     int i = 0;
     Node * curr_no = curr_co->curr_node;
     
     while(i < tokens) {
-        if(strncmp(splitted_path[i], "..",2) == 0) {
+        if(strncmp(splitted_path[i], ".",strlen(splitted_path[i])) == 0) {
+            i++;
+            continue;
+        }
+        if(strncmp(splitted_path[i], "..",strlen(splitted_path[i])) == 0) {
             curr_no = curr_no->getParent();
-
-            //todo handle '.' cd
             if(curr_no == NULL) {
-                printf("ERROR : Invalid path\n");
-                strcpy(curr_co->curr_out,"ERROR : Invalid path");
-                return 0;
+                return ERROR_ACCESS_DENIED;
             }
-            if(strcmp(curr_no->getFolderName(), "root") != 0) {
+            if(strcmp(curr_no->getFolderName(), ROOT) != 0) {
                 strcat(new_path, "/");
                 strncat(new_path, curr_no->getFolderName(), MAX_FOLDER_NAME_SIZE);
             }
@@ -273,10 +278,7 @@ int cmd_cd(connection_t* curr_co) {
         
         curr_no = curr_no->checkName(splitted_path[i]);
         if(curr_no == NULL) {
-            printf("ERROR : Invalid path");
-            strcpy(curr_co->curr_out,"ERROR : Invalid path");
-
-            return 0;
+            return ERROR_INVALID_PATH;
         }
 
         strcat(new_path, "/");
@@ -287,13 +289,13 @@ int cmd_cd(connection_t* curr_co) {
 
     curr_co->curr_node = curr_no;
  
-    char buf[MAX_PATH_SIZE];
-    bzero(buf, MAX_PATH_SIZE);
+    char buf[FULL_PATH_SIZE];
+    bzero(buf, FULL_PATH_SIZE);
     // rewrite new path
     
     while(strncmp(curr_no->getFolderName(), ROOT,MAX_FOLDER_NAME_SIZE) != 0) {
-        char tmp[MAX_PATH_SIZE];
-        strncpy(tmp, buf, MAX_PATH_SIZE);
+        char tmp[FULL_PATH_SIZE];
+        strncpy(tmp, buf, FULL_PATH_SIZE);
         if(strncmp(curr_no->getFolderName(), ROOT,MAX_FOLDER_NAME_SIZE) != 0) {
             strncpy(buf, curr_no-> getFolderName(), MAX_FOLDER_NAME_SIZE);
             strcat(buf, "/");
@@ -302,20 +304,43 @@ int cmd_cd(connection_t* curr_co) {
         curr_no = curr_no->getParent();
     }
     
-    strncpy(new_path,curr_co->root, MAX_PATH_SIZE); 
+    strncpy(new_path,curr_co->root, FULL_PATH_SIZE);
     
     strcat(new_path, "/");   
-    strncat(new_path, buf, MAX_PATH_SIZE);
+    strncat(new_path, buf, FULL_PATH_SIZE);
     printf("cd to %s\n", new_path);
-    strncpy(curr_co->pwd, new_path, MAX_PATH_SIZE);
+    strncpy(curr_co->pwd, new_path, FULL_PATH_SIZE);
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
     strcpy(out, "pwd : /");
-    strncat(out, buf, MAX_PATH_SIZE);
-    strncpy(curr_co->curr_out, out, MAX_PATH_SIZE);
+    strncat(out, buf, FULL_PATH_SIZE);
+    strncpy(curr_co->curr_out, out, FULL_PATH_SIZE);
     return 0;
 }
 
+int cmd_rm(connection_t* curr_co) {
+    if(strlen(curr_co->curr_args[0]) > MAX_FOLDER_NAME_SIZE) {
+        return ERROR_FOLDER_NAME_SIZE;
+    }
+    char cmd[MAX_INPUT_SIZE];
+    bzero(cmd, MAX_INPUT_SIZE);
+    strcpy(cmd, "rm -r ");
+    strncat(cmd, curr_co->pwd, MAX_PATH_SIZE);
+    strcat(cmd, "/");
+    strncat(cmd, curr_co->curr_args[0], MAX_FOLDER_NAME_SIZE);
+    char out[MAX_OUTPUT_SIZE];
+    bzero(out, MAX_OUTPUT_SIZE);
+    execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    if(strlen(out) > 0) {
+        //failure
+        strcpy(curr_co->curr_out, "Command rm failed");
+    } else {
+        //success
+        strcpy(curr_co->curr_out, "Removed ");
+        strncat(curr_co->curr_out, curr_co->curr_args[0], MAX_FOLDER_NAME_SIZE);
+    }
+    return 0;
+}
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;
