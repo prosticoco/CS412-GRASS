@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-#define NUM_COMMANDS 12
+#define NUM_COMMANDS 14
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
@@ -18,7 +18,9 @@ command_t cmds[NUM_COMMANDS] = {
     {"ls", 0, true, cmd_ls},
     {"mkdir", 1, true, cmd_mkdir}, 
     {"cd", 1, true, cmd_cd},
-    {"rm",1,true, cmd_rm}
+    {"rm",1,true, cmd_rm},
+    {"get",1,true,cmd_get},
+    {"put",2,true,cmd_put}
 };
 
 /**
@@ -341,6 +343,18 @@ int cmd_rm(connection_t* curr_co) {
     }
     return 0;
 }
+
+int cmd_put(connection_t* curr_co){
+
+}
+
+int cmd_get(connection_t* curr_co){
+    int error = 0;
+
+    //curr_co->pwd
+    return 0;
+}
+
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;

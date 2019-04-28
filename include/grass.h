@@ -29,6 +29,7 @@
 #define MAX_OUTPUT_SIZE 512
 #define MAX_LINE_SIZE 128
 #define MAX_PATH_SIZE 128
+#define MAX_FILE_SIZE 4294967296
 #define ROOT_DIR_NAME "/root"
 #define ROOT "root"
 

@@ -134,5 +134,7 @@ int cmd_mkdir(connection_t* curr_co);
  */
 int cmd_rm(connection_t* curr_co);
 
+int cmd_get(connection_t* curr_co);
+int cmd_put(connection_t* curr_co);
 
 #endif

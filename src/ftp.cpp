@@ -23,6 +23,7 @@ int setup_ftp_connection_server(connection_t* client){
     int error = 0;
     int portno = 0;
     int sock = -1;
+    // setup server socket on random available port and update port number 
     error = setup_server_co(&portno,&sock,true,MAX_CO_FTP);
     if(error){
         printf("Error setup_server_co()\n");
@@ -31,6 +32,10 @@ int setup_ftp_connection_server(connection_t* client){
     client->ftp_port = portno;
     client->ftp_socket = sock;
     return 0;
+}
+
+int setup_ftp_connection_client(){
+    
 }
 
 int setup_server_co(int * portno,int * sock,bool random_port,unsigned int max_co){

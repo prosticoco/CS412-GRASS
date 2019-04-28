@@ -1,0 +1,3 @@
+Hello my friends, I have written this small text file
+to test opening of files in subdirectories,
+what can go wrong ?
