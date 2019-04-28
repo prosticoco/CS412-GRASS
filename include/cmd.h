@@ -126,6 +126,14 @@ int cmd_cd(connection_t* curr_co);
  */
 int cmd_mkdir(connection_t* curr_co);
 
+/**
+ * @brief function which performs the rm command ( restricted to the current working directory)
+ * 
+ * @param curr_co pointer to the metadata of the connection 
+ * @return int returns 0 upon success, negative value if an error occured
+ */
+int cmd_rm(connection_t* curr_co);
+
 int cmd_get(connection_t* curr_co);
 int cmd_put(connection_t* curr_co);
 
