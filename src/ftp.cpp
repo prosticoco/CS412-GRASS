@@ -53,29 +53,76 @@ int stop_ftp_thread(connection_t* client){
 void ftp_end(ftp_data_t * ftp){
     pthread_mutex_lock(&(ftp->clean_lock));
     ftp->using_ftp = false;
+    ftp->file_size = 0;
     if(ftp->ftp_file != NULL){
         fclose(ftp->ftp_file);
         ftp->ftp_file = NULL;
     }
     close(ftp->ftp_socket);
-    bzero(ftp->pwd,sizeof(ftp->pwd));
+    bzero(ftp->filepath,MAX_ROOT_PATH + MAX_PATH_SIZE);
     pthread_mutex_unlock(&(ftp->clean_lock));
     pthread_exit((void *)0);
 }
 
 void *ftp_subthread(void* ptr){
+    int new_sockfd;
+    int error;
     ftp_data_t * ftp = (ftp_data_t*) ptr;
     if(ftp->ftp_type == FTP_RECV){
-        ftp->ftp_file = fopen(ftp->filename,"wb");
+        ftp->ftp_file = fopen(ftp->filepath,"wb");
         if(ftp->ftp_file == NULL){
             printf("Error Opening file, thread_exiting \n");
-            pthread_exit((void *)0);
+            ftp_end(ftp);
         }
     }else{
-        //ftp->ftp_file = fopen()
+        ftp->ftp_file = fopen(ftp->filepath,"rb");
+        if(ftp->ftp_file == NULL){
+            printf("Error Opening file, thread_exiting \n");
+            ftp_end(ftp);
+        }
     }
+    int fd = fileno(ftp->ftp_file);
+    if(fd < 0){
+        printf("Error getting the file descriptor \n");
+        ftp_end(ftp);
+    }
+    if(ftp->ftp_user == FTP_SERVER){
+        struct sockaddr_in cli_addr;
+        socklen_t clilen;
+        clilen = sizeof(cli_addr);   
+        new_sockfd = accept(ftp->ftp_socket,(struct sockaddr *) &cli_addr,&clilen);
+        if(new_sockfd < 0){
+            printf("Error : FTP thread, accept() failed \n");
+            ftp_end(ftp);
+        }
+        do_ftp(ftp,new_sockfd,fd);
+    }else{
+        error = setup_client_co(ftp->ip,ftp->ftp_port,&new_sockfd);
+        if(error){
+            printf("Error setting connection to server \n");
+            ftp_end(ftp);
+        }
+        do_ftp(ftp,new_sockfd,fd);
+    }
+}
 
-
+void do_ftp(ftp_data_t* ftp,int sockfd,int fd){
+    if(ftp->ftp_type == FTP_RECV){
+        int error = file_recv(sockfd,fd,ftp->file_size);
+        if(error == ERROR_FILESIZE){
+        char err_msg[] = "Error:  file transfer failed.";
+        write(ftp->main_socket,err_msg,strlen(err_msg)); 
+        }
+        if(error == ERROR_NETWORK){
+            printf("Error : file reception failed \n");
+        }
+    }else{
+        int error = file_send(sockfd,fd,ftp->file_size);
+        if(error != ftp->file_size){
+            printf("Error file send failed or did not send required amount \n");
+        }
+    }
+    ftp_end(ftp);
 }
 
 

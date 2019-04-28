@@ -4,7 +4,7 @@ INCLUDES = include
 OBJS = utils.o cmd.o ftp.o exit.o  path.o
 
 CC=g++
-CFLAGS=-Wall -Wextra -g -fno-stack-protector -fsanitize=undefined -pthread -z execstack  -std=gnu11 -I $(INCLUDES)/ -m32 
+CFLAGS=-Wall -Wextra -g -fno-stack-protector -pthread -z execstack  -std=gnu11 -I $(INCLUDES)/ -m32 
 DEPS = $(wildcard $(INCLUDES)/%.h)
 
 all: utils.o exit.o ftp.o cmd.o path.o $(BINDIR)/client  $(BINDIR)/server $(DEPS)

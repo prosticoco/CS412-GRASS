@@ -46,3 +46,5 @@ int stop_ftp_thread(connection_t* client);
 void *ftp_subthread(void* ptr);
 
 void ftp_end(ftp_data_t * ftp);
+
+void do_ftp(ftp_data_t* ftp,int sockfd,int fd);

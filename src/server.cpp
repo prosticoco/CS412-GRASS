@@ -50,6 +50,7 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     tmp->exit = false;
     tmp->ftp_data.using_ftp = false;
     tmp->ftp_data.ftp_file = NULL;
+    tmp->ftp_data.file_size = 0;
     int random = rand() % 1000;
     sprintf(tmp->username,"Unknown_user_%d",random);
     tmp->curr_in = NULL;
@@ -88,7 +89,6 @@ void *handle_client(void* ptr){
         if(client->exit) {
             break;
         }
-        printf("user : [%s]\n",client->username);
         // count the number of bytes read from socket
         ssize_t b;
         bzero(input,sizeof(input));
