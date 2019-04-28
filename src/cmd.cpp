@@ -407,7 +407,6 @@ int cmd_grep(connection_t* curr_co) {
     return 0;
 }
 
-
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;
     int token_num = 0;
