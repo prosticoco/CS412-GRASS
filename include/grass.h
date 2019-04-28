@@ -23,6 +23,7 @@
 #define MAX_USERNAME_SIZE 32
 #define MAX_PASSWORD_SIZE 32
 #define MAX_THREAD_NUMS 16
+#define IP_ADDRESS_MAX_LENGTH 16
 #define MAX_TOKENS 5
 #define MAX_TOKENS_PATH 15
 #define MAX_INPUT_SIZE 256
@@ -86,14 +87,16 @@ typedef struct{
 struct ftp_data_t{
     pthread_t ftp_id;
     pthread_mutex_t clean_lock;
+    int main_socket;
     int ftp_socket;
     int ftp_port;
     int ftp_type;
     int ftp_user;
-    char pwd[MAX_ROOT_PATH+MAX_PATH_SIZE];
-    char filename[MAX_FILENAME_SIZE];
+    char filepath[MAX_ROOT_PATH + MAX_PATH_SIZE];
+    char ip[IP_ADDRESS_MAX_LENGTH];
     bool using_ftp;
     FILE * ftp_file;
+    size_t file_size;
 };
 
 struct connection_t{

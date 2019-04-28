@@ -41,6 +41,9 @@ int process_cmd(connection_t * curr_co){
     std::cout << "Processing cmd" << std::endl;
     curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
+    //for(int i = 0; i < MAX_TOKENS; i++){
+      //  memset(&(splitted_cmd[i]),0,MAX_ARG_SIZE);
+    //}
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
     if(num_tokens <= 0){
         printf("Error : Tokenizer : %d \n",num_tokens);
@@ -356,8 +359,12 @@ int cmd_put(connection_t* curr_co){
         stop_ftp_thread(curr_co);
     }
     pthread_mutex_unlock(&(curr_co->ftp_data.clean_lock));
-    strncpy(curr_co->ftp_data.filename,curr_co->curr_args[0],sizeof(curr_co->ftp_data.filename));
-    size_t file_size = atoi(curr_co->curr_args[1]);
+    bzero(curr_co->ftp_data.filepath,sizeof(curr_co->ftp_data.filepath));
+    strncpy(curr_co->ftp_data.filepath,curr_co->pwd,sizeof(curr_co->pwd));
+    strcpy(curr_co->ftp_data.filepath,"/");
+    strncpy(curr_co->ftp_data.filepath,curr_co->curr_args[0],
+            sizeof(curr_co->ftp_data.filepath) - strlen(curr_co->ftp_data.filepath));
+    curr_co->ftp_data.file_size = atoi(curr_co->curr_args[1]);
     // setup connection
     error = setup_ftp_connection_server(curr_co);
     if(error){
@@ -367,6 +374,7 @@ int cmd_put(connection_t* curr_co){
     curr_co->ftp_data.using_ftp = true;
     curr_co->ftp_data.ftp_type = FTP_RECV;
     curr_co->ftp_data.ftp_user = FTP_SERVER;
+    curr_co->ftp_data.main_socket = curr_co->connection_socket;
     //spawn thread
     pthread_create(&(curr_co->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(curr_co->ftp_data));
     // answer to client
