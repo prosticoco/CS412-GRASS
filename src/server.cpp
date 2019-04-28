@@ -37,9 +37,10 @@ void *handle_client(void* curr_co);
 int init_connection(int socket,connection_t* co,data_t* data);
 
 int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
+    int err = 0;
     printf("Initializing new connection... \n");
-    tmp->ftp_socket = -1;
-    tmp->ftp_port = -1;
+    tmp->ftp_data.ftp_socket = -1;
+    tmp->ftp_data.ftp_port = -1;
     tmp->auth = false;
     tmp->connection_socket = new_sockfd;
     tmp->curr_args = NULL;
@@ -47,6 +48,8 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     tmp->server_data = data;
     tmp->username = (char *) malloc(MAX_USERNAME_SIZE);
     tmp->exit = false;
+    tmp->ftp_data.using_ftp = false;
+    tmp->ftp_data.ftp_file = NULL;
     int random = rand() % 1000;
     sprintf(tmp->username,"Unknown_user_%d",random);
     tmp->curr_in = NULL;
@@ -57,6 +60,11 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     printf("Connection PWD : %s\n", tmp->pwd);
     tmp->root_node = data->root;
     tmp->curr_node = data->root;
+    err = pthread_mutex_init(&(tmp->ftp_data.clean_lock),NULL);
+    if(err){
+        printf("Error Init ftp mutex \n");
+        return err;
+    }
     
     add_connection(data,tmp);
     int ret = pthread_create(&(tmp->tid),NULL,handle_client,(void *)tmp);

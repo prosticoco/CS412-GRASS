@@ -29,10 +29,55 @@ int setup_ftp_connection_server(connection_t* client){
         printf("Error setup_server_co()\n");
         return error;
     }
-    client->ftp_port = portno;
-    client->ftp_socket = sock;
+    client->ftp_data.ftp_port = portno;
+    client->ftp_data.ftp_socket = sock;
+    client->ftp_data.using_ftp = true;
     return 0;
 }
+
+
+int stop_ftp_thread(connection_t* client){
+    pthread_kill(client->ftp_data.ftp_id,SIGTERM);
+    pthread_join(client->ftp_data.ftp_id,NULL);
+    if(client->ftp_data.ftp_file != NULL){
+        fclose(client->ftp_data.ftp_file);
+        client->ftp_data.ftp_file = NULL;
+    }
+    close(client->ftp_data.ftp_socket);
+    client->ftp_data.using_ftp = false;
+    client->ftp_data.ftp_port = -1;
+    return 0;
+}
+
+
+void ftp_end(ftp_data_t * ftp){
+    pthread_mutex_lock(&(ftp->clean_lock));
+    ftp->using_ftp = false;
+    if(ftp->ftp_file != NULL){
+        fclose(ftp->ftp_file);
+        ftp->ftp_file = NULL;
+    }
+    close(ftp->ftp_socket);
+    bzero(ftp->pwd,sizeof(ftp->pwd));
+    pthread_mutex_unlock(&(ftp->clean_lock));
+    
+}
+
+void *ftp_subthread(void* ptr){
+    ftp_data_t * ftp = (ftp_data_t*) ptr;
+    if(ftp->ftp_type == FTP_RECV){
+        ftp->ftp_file = fopen(ftp->filename,"wb");
+        if(ftp->ftp_file == NULL){
+            printf("Error Opening file, thread_exiting \n");
+            pthread_exit((void *)0);
+        }
+    }
+
+
+}
+
+
+
 
 int setup_ftp_connection_client(){
     

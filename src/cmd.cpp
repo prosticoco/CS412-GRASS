@@ -1,9 +1,11 @@
 #include "cmd.h"
 #include "error.h"
 #include "utils.h"
+#include "ftp.h"
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
+#include <pthread.h>
 #define NUM_COMMANDS 13
 
 command_t cmds[NUM_COMMANDS] = {
@@ -320,7 +322,30 @@ int cmd_cd(connection_t* curr_co) {
 
 
 int cmd_put(connection_t* curr_co){
-
+    int error = 0;
+    // if the client is currently using ftp
+    pthread_mutex_lock(&(curr_co->ftp_data.clean_lock));
+    if(curr_co->ftp_data.using_ftp = true){
+        printf("Thread is already used, killing and freeing \n");
+        stop_ftp_thread(curr_co);
+    }
+    pthread_mutex_unlock(&(curr_co->ftp_data.clean_lock));
+    strncpy(curr_co->ftp_data.filename,curr_co->curr_args[0],sizeof(curr_co->ftp_data.filename));
+    size_t file_size = atoi(curr_co->curr_args[1]);
+    // setup connection
+    error = setup_ftp_connection_server(curr_co);
+    if(error){
+        printf("Error : setup ftp connection failed \n");
+        return error;
+    }
+    curr_co->ftp_data.using_ftp = true;
+    curr_co->ftp_data.ftp_type = FTP_RECV;
+    curr_co->ftp_data.ftp_user = FTP_SERVER;
+    //spawn thread
+    pthread_create(&(curr_co->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(curr_co->ftp_data));
+    // answer to client
+    sprintf(curr_co->curr_out,"put port:    %d",curr_co->ftp_data.ftp_port);
+    return 0;
 }
 
 int cmd_get(connection_t* curr_co){

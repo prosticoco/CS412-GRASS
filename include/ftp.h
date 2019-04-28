@@ -39,3 +39,10 @@ int setup_client_co(char * ip,int portno,int* sock);
 int file_send(int sock,int fd,size_t size);
 
 int file_recv(int sock,int fd, size_t size);
+
+
+int stop_ftp_thread(connection_t* client);
+
+void *ftp_subthread(void* ptr);
+
+void ftp_end(ftp_data_t * ftp);

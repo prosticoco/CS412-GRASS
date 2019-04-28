@@ -29,12 +29,23 @@
 #define MAX_OUTPUT_SIZE 512
 #define MAX_LINE_SIZE 128
 #define MAX_PATH_SIZE 128
+#define MAX_ROOT_PATH 256
 #define MAX_FILE_SIZE 4294967296
+#define MAX_FILENAME_SIZE 32
 #define ROOT_DIR_NAME "/root"
 #define ROOT "root"
 
+
+
+#define FTP_SEND 0
+#define FTP_RECV 1
+#define FTP_CLIENT 0
+#define FTP_SERVER 1
+
 struct connection_t;
 typedef struct connection_t connection_t;
+struct ftp_data_t;
+typedef struct ftp_data_t ftp_data_t;
 
 typedef struct {
     char* uname;
@@ -72,12 +83,23 @@ typedef struct{
     Node* root;
 }data_t;
 
+struct ftp_data_t{
+    pthread_t ftp_id;
+    pthread_mutex_t clean_lock;
+    int ftp_socket;
+    int ftp_port;
+    int ftp_type;
+    int ftp_user;
+    char pwd[MAX_ROOT_PATH+MAX_PATH_SIZE];
+    char filename[MAX_FILENAME_SIZE];
+    bool using_ftp;
+    FILE * ftp_file;
+};
+
 struct connection_t{
     pthread_t tid;
     data_t * server_data;
     int connection_socket;
-    int ftp_socket;
-    int ftp_port;
     char * username;
     bool auth;
     bool ready_for_check;
@@ -85,12 +107,15 @@ struct connection_t{
     char * curr_in;
     char * curr_out;
     char relative_pwd[MAX_PATH_SIZE];
-    char pwd[MAX_PATH_SIZE];
-    char root[MAX_PATH_SIZE];
+    char pwd[MAX_ROOT_PATH+MAX_PATH_SIZE];
+    char root[MAX_ROOT_PATH];
     char (*curr_args)[MAX_ARG_SIZE];
     Node* root_node;
     Node* curr_node; 
+    ftp_data_t ftp_data;
 };
+
+
 
 
 extern data_t* prog_data;
