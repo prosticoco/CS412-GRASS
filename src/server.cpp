@@ -88,6 +88,7 @@ void *handle_client(void* ptr){
         if(client->exit) {
             break;
         }
+        printf("user : [%s]\n",client->username);
         // count the number of bytes read from socket
         ssize_t b;
         bzero(input,sizeof(input));

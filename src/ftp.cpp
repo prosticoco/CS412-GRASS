@@ -60,7 +60,7 @@ void ftp_end(ftp_data_t * ftp){
     close(ftp->ftp_socket);
     bzero(ftp->pwd,sizeof(ftp->pwd));
     pthread_mutex_unlock(&(ftp->clean_lock));
-    
+    pthread_exit((void *)0);
 }
 
 void *ftp_subthread(void* ptr){
@@ -71,6 +71,8 @@ void *ftp_subthread(void* ptr){
             printf("Error Opening file, thread_exiting \n");
             pthread_exit((void *)0);
         }
+    }else{
+        //ftp->ftp_file = fopen()
     }
 
 

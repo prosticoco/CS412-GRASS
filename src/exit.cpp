@@ -26,6 +26,7 @@ void stop(int signum) {
 	//signal(SIGINT, SIG_DFL);
     connection_t * tmp;
     for(auto c : prog_data->connections){
+        printf("going to kill user : [%s]\n",c->username);
         pthread_kill(c->tid, SIGTERM);
         pthread_join(c->tid,NULL);
         printf("Killed user : [%s] \n",c->username);
