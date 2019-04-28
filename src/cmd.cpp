@@ -5,12 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-<<<<<<< HEAD
 #include <pthread.h>
-#define NUM_COMMANDS 13
-=======
 #define NUM_COMMANDS 14
->>>>>>> ea7c57539c49a5e6ffb8b4f44ba4db4188682aba
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
