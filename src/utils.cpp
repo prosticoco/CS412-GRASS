@@ -110,6 +110,7 @@ int check_dir(data_t* data) {
     Node* root = new Node();
     root->setFolderName(ROOT);
     data->root = root;
+    return 0;
     
 
 }

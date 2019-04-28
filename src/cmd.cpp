@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <pthread.h>
-#define NUM_COMMANDS 14
+#define NUM_COMMANDS 15
 
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
@@ -22,7 +22,8 @@ command_t cmds[NUM_COMMANDS] = {
     {"cd", 1, true, cmd_cd},
     {"rm",1,true, cmd_rm},
     {"get",1,true,cmd_get},
-    {"put",2,true,cmd_put}
+    {"put",2,true,cmd_put},
+    {"grep", 1, true, cmd_grep}
 };
 
 /**
@@ -380,13 +381,29 @@ int cmd_get(connection_t* curr_co){
     return 0;
 }
 
+int cmd_grep(connection_t* curr_co) {
+    printf("--- grep ---\n");
+    char cmd[MAX_INPUT_SIZE];
+    bzero (cmd, MAX_INPUT_SIZE);
+    sprintf(cmd, "grep %s %s/* -R",curr_co->curr_args[0], curr_co->pwd);
+    std::cout << cmd << std::endl;
+    char out[4*MAX_OUTPUT_SIZE];
+    bzero(out, 4*MAX_OUTPUT_SIZE);
+    execute_system_cmd(cmd,out,4*MAX_OUTPUT_SIZE);
+    if(strlen(out) > 0) {
+        printf("Output : [%s]\n", out);
+        strncpy(curr_co->curr_out, out, MAX_OUTPUT_SIZE);
+    } else {
+        strcpy(curr_co->curr_out, "No match");
+    }
+    return 0;
+}
+
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;
     int token_num = 0;
-    // on recoit le premier token
     char* token = strtok(in, " ");
-    // on met la condition i < 4 dans la boucle afin de garantir de ne pas tokeniser plus de 4 entrées
     while(token != NULL && i < MAX_TOKENS){
         token_num ++;
         strncpy(out[i],token,MAX_ARG_SIZE);
@@ -399,7 +416,6 @@ int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
 int tokenize_path(char* path, char (*out)[MAX_FOLDER_NAME_SIZE]) {
     int i = 0;
     int token_num = 0;
-    // on recoit le premier token
     char* token = strtok(path, "/");
     while(token != NULL){
         token_num ++;
