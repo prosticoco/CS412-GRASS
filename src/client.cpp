@@ -81,7 +81,7 @@ bool chat(int sock, char* buffer,ftp_data_t* ftp) {
             memset(&(splitted_input[i]),0,MAX_ARG_SIZE);
             memset(&(splitted_response[i]),0,MAX_ARG_SIZE);
         }
-        num_tokens = tokenize_cmd(buffer,splitted_input);
+        //num_tokens = tokenize_cmd(buffer,splitted_input);
         if(strcmp("put",splitted_input[0]) == 0){
             if(num_tokens > 2){
                 //strncpy(ftp->)
@@ -92,7 +92,7 @@ bool chat(int sock, char* buffer,ftp_data_t* ftp) {
             cout <<"ERROR writing to socket" << endl;
         bzero(buffer,BUFFER_READ_MAX_SIZE);
         n = read(sock,buffer,BUFFER_READ_MAX_SIZE);
-        num_tokens = tokenize_cmd(buffer,splitted_response);
+        //num_tokens = tokenize_cmd(buffer,splitted_response);
         if (n < 0) {
             error("ERROR reading from socket");
         }
@@ -105,7 +105,7 @@ bool chat(int sock, char* buffer,ftp_data_t* ftp) {
     return false;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv){
     if(argc != 3){
         printf("Error : Wrong Parameters\n");
         return 0;

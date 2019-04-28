@@ -6,7 +6,4 @@
 
 
 
-## How our program is organized and how it works
-
-### Source/Header File organization
 

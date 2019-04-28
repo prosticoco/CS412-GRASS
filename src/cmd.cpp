@@ -40,9 +40,9 @@ int process_cmd(connection_t * curr_co){
     std::cout << "Processing cmd" << std::endl;
     curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
-    for(int i = 0; i < MAX_TOKENS; i++){
-        memset(&(splitted_cmd[i]),0,MAX_ARG_SIZE);
-    }
+    //for(int i = 0; i < MAX_TOKENS; i++){
+      //  memset(&(splitted_cmd[i]),0,MAX_ARG_SIZE);
+    //}
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
     if(num_tokens <= 0){
         printf("Error : Tokenizer : %d \n",num_tokens);

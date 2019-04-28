@@ -86,13 +86,13 @@ void *handle_client(void* ptr){
     char output[BUFFER_MAX_SIZE];
     printf("Connection started for user : [%s] \n",client->username);
     while(1){
-        if(client->exit) {
+        if(client->exit){
             break;
         }
         // count the number of bytes read from socket
         ssize_t b;
-        bzero(input,sizeof(input));
-        bzero(output,sizeof(output));
+        bzero(input,BUFFER_MAX_SIZE);
+        bzero(output,BUFFER_MAX_SIZE);
         b = read(client->connection_socket,input,sizeof(input));
         if(!b){
             printf("Client on socket : %d exiting \n",client->connection_socket);
@@ -148,31 +148,6 @@ int init_server(data_t * data){
     }
     data->main_socket = sockfd;
     check_dir(data);
-    /**
-    struct sockaddr_in serv_addr;
-    // open the server's socket
-    sockfd = socket(AF_INET,SOCK_STREAM,0);
-    if(sockfd < 0){
-        printf("ERROR opening socket \n");
-    }
-    data->main_socket = sockfd;
-    // initialize the server's address sructure
-    bzero((char*) &serv_addr,sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(portno);
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    // bind the server's address and port to the socket
-    if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
-        printf("ERROR on binding\n");
-        return -1;
-    }
-    // A CHANGER
-    // listen to 5 maximum connexions
-    if(listen(sockfd,5) != 0){
-        printf("ERROR listening failed\n");
-        return -1;
-    }
-    **/
     return 0;  
 }
 
