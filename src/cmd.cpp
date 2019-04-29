@@ -231,98 +231,45 @@ int cmd_cd(connection_t* curr_co) {
     if(strlen(curr_co->curr_args[0]) > MAX_PATH_SIZE) {
         return ERROR_MAX_PATH_SIZE;
     }
+
+    //testing
+    char cd[MAX_PATH_SIZE];
+    bzero(cd, MAX_PATH_SIZE);
+    char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH];
+    bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH);
+    char out[MAX_OUTPUT_SIZE];
+    bzero(out, MAX_OUTPUT_SIZE);
     
-    const int base_length = strlen(curr_co->root);
-    const int FULL_PATH_SIZE = MAX_PATH_SIZE + base_length;
-    char nwd[FULL_PATH_SIZE];
-    bzero(nwd, FULL_PATH_SIZE);
-
-    char new_path[FULL_PATH_SIZE];
-    bzero(new_path, FULL_PATH_SIZE );
-    
-    // check if path is valid
-    char in[FULL_PATH_SIZE];
-    char splitted_path[MAX_TOKENS_PATH][MAX_FOLDER_NAME_SIZE];
-
-    bzero(in, FULL_PATH_SIZE);
-    strncpy(in, curr_co->curr_args[0], FULL_PATH_SIZE);
-    int tokens = tokenize_path(in, splitted_path);
-
-    if(strncmp(curr_co->curr_args[0], "/", 1 )==0) {
-        strncpy(new_path, curr_co->root, FULL_PATH_SIZE);
-        curr_co->curr_node = curr_co->root_node;
-        if(tokens == 0) {
-            curr_co->curr_node = curr_co->root_node;
-            strncpy(curr_co->pwd, new_path, FULL_PATH_SIZE);
-            char out[MAX_INPUT_SIZE];
-            bzero(out, MAX_INPUT_SIZE);
-            strcpy(out, "pwd : /");
-            strncpy(curr_co->curr_out, out, MAX_OUTPUT_SIZE);
-            return 0;
-        }
+    if(strncmp(curr_co->curr_args[0], "/", 1 )!=0) {
+        sprintf(new_path, "%s/%s", curr_co->pwd, curr_co->curr_args[0]);
     } else {
-        strncpy(new_path, curr_co->pwd, FULL_PATH_SIZE);
+        sprintf(new_path, "%s/%s", curr_co->root, curr_co->curr_args[0]);
     }
-    int i = 0;
-    Node * curr_no = curr_co->curr_node;
+    printf("%s\n", new_path);
+    sprintf(cd, "cd %s && pwd", new_path);
+    execute_system_cmd(cd,out, MAX_OUTPUT_SIZE);
+    printf("Return from syscall : %s\n", out);
     
-    while(i < tokens) {
-        if(strncmp(splitted_path[i], ".",strlen(splitted_path[i])) == 0) {
-            i++;
-            continue;
-        }
-        if(strncmp(splitted_path[i], "..",strlen(splitted_path[i])) == 0) {
-            curr_no = curr_no->getParent();
-            if(curr_no == NULL) {
-                return ERROR_ACCESS_DENIED;
-            }
-            if(strcmp(curr_no->getFolderName(), ROOT) != 0) {
-                strcat(new_path, "/");
-                strncat(new_path, curr_no->getFolderName(), MAX_FOLDER_NAME_SIZE);
-            }
-            i++;
-            continue;
-        }
-        
-        curr_no = curr_no->checkName(splitted_path[i]);
-        if(curr_no == NULL) {
-            return ERROR_INVALID_PATH;
-        }
-
-        strcat(new_path, "/");
-        strncat(new_path, curr_no->getFolderName(), MAX_FOLDER_NAME_SIZE);
-    
-        i++;
+    if(strlen(out) == 0) {
+        sprintf(curr_co->curr_out, "Invalid path");
+        return 0;
     }
 
-    curr_co->curr_node = curr_no;
- 
-    char buf[FULL_PATH_SIZE];
-    bzero(buf, FULL_PATH_SIZE);
-    // rewrite new path
-    
-    while(strncmp(curr_no->getFolderName(), ROOT,MAX_FOLDER_NAME_SIZE) != 0) {
-        char tmp[FULL_PATH_SIZE];
-        strncpy(tmp, buf, FULL_PATH_SIZE);
-        if(strncmp(curr_no->getFolderName(), ROOT,MAX_FOLDER_NAME_SIZE) != 0) {
-            strncpy(buf, curr_no-> getFolderName(), MAX_FOLDER_NAME_SIZE);
-            strcat(buf, "/");
-            strncat(buf, tmp, MAX_FOLDER_NAME_SIZE);
-        }
-        curr_no = curr_no->getParent();
+    if(strncmp(out, curr_co->root, strlen(curr_co->root)) != 0) {
+        return ERROR_ACCESS_DENIED;
     }
-    
-    strncpy(new_path,curr_co->root, FULL_PATH_SIZE);
-    
-    strcat(new_path, "/");   
-    strncat(new_path, buf, FULL_PATH_SIZE);
-    printf("cd to %s\n", new_path);
-    strncpy(curr_co->pwd, new_path, FULL_PATH_SIZE);
-    char out[MAX_INPUT_SIZE];
-    bzero(out, MAX_INPUT_SIZE);
-    strcpy(out, "pwd : /");
-    strncat(out, buf, FULL_PATH_SIZE);
-    strncpy(curr_co->curr_out, out, FULL_PATH_SIZE);
+
+    std::string relative_path(out);
+    findAndReplaceAll(relative_path, curr_co->root, "");
+    std::cout << "Relative path : " << relative_path << std::endl;
+    sprintf(curr_co->relative_pwd, relative_path.c_str(), MAX_PATH_SIZE);
+    sprintf(curr_co->pwd, out, MAX_PATH_SIZE + MAX_ROOT_PATH);
+    if(relative_path.size() <= 0) {
+        sprintf(curr_co->curr_out, "/");
+    } else {
+        sprintf(curr_co->curr_out, curr_co->relative_pwd, MAX_PATH_SIZE);
+    }
+
     return 0;
 }
 
@@ -393,14 +340,15 @@ int cmd_grep(connection_t* curr_co) {
     printf("--- grep ---\n");
     char cmd[MAX_INPUT_SIZE];
     bzero (cmd, MAX_INPUT_SIZE);
-    sprintf(cmd, "grep %s %s/* -R",curr_co->curr_args[0], curr_co->pwd);
+    sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
     std::cout << cmd << std::endl;
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);
     execute_system_cmd(cmd,out,4*MAX_OUTPUT_SIZE);
     if(strlen(out) > 0) {
-        printf("Output : [%s]\n", out);
-        strncpy(curr_co->curr_out, out, MAX_OUTPUT_SIZE);
+        std::string tmp(out);
+        findAndReplaceAll(tmp,curr_co->root,"");
+        strncpy(curr_co->curr_out, tmp.c_str(), MAX_OUTPUT_SIZE);
     } else {
         strcpy(curr_co->curr_out, "No match");
     }
