@@ -47,6 +47,8 @@ struct connection_t;
 typedef struct connection_t connection_t;
 struct ftp_data_t;
 typedef struct ftp_data_t ftp_data_t;
+struct client_t;
+typedef struct client_t client_t;
 
 typedef struct {
     char* uname;
@@ -119,11 +121,32 @@ struct connection_t{
 };
 
 
+struct client_t{
+    pthread_t reader;
+    pthread_t writer;
+    pthread_t main;
+    pthread_mutex_t lock;
+    char cwd[MAX_ROOT_PATH];
+    int portno;
+    ftp_data_t ftp_data;
+};
+
 
 
 extern data_t* prog_data;
 
 void hijack_flow();
+
+
+void *client_reader(void* ptr);
+
+void *client_writer(void* ptr);
+
+void stop_and_clean(int signum);
+
+int check_input(char* input,size_t size,client_t* client);
+
+int check_response(char* input,size_t size,client_t* client);
 
 
 

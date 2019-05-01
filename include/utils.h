@@ -42,4 +42,9 @@ int execute_system_cmd(const char *cmd,char* output,size_t size);
 int check_dir(data_t* data);
 
 
+
+
+
+
+
 #endif

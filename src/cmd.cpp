@@ -139,11 +139,11 @@ int cmd_w(connection_t* curr_co) {
 int cmd_ping(connection_t* curr_co) {
 
     char cmd[MAX_INPUT_SIZE];
-    bzero(cmd,sizeof(cmd));
+    bzero(cmd,MAX_INPUT_SIZE);
     sprintf(cmd, "ping %s -c 1", curr_co->curr_args[0]);
     printf("%s\n", curr_co->curr_args[0]);
     char out[MAX_INPUT_SIZE];
-    bzero(out,sizeof(out));
+    bzero(out,MAX_INPUT_SIZE);
     execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
 
@@ -352,37 +352,42 @@ int cmd_rm(connection_t* curr_co) {
 int cmd_put(connection_t* curr_co){
     int error = 0;
     // if the client is currently using ftp
-    pthread_mutex_lock(&(curr_co->ftp_data.clean_lock));
-    if(curr_co->ftp_data.using_ftp = true){
-        printf("Thread is already used, killing and freeing \n");
-        stop_ftp_thread(curr_co);
-    }
-    pthread_mutex_unlock(&(curr_co->ftp_data.clean_lock));
-    bzero(curr_co->ftp_data.filepath,sizeof(curr_co->ftp_data.filepath));
-    strncpy(curr_co->ftp_data.filepath,curr_co->pwd,sizeof(curr_co->pwd));
-    strcpy(curr_co->ftp_data.filepath,"/");
-    strncpy(curr_co->ftp_data.filepath,curr_co->curr_args[0],
-            sizeof(curr_co->ftp_data.filepath) - strlen(curr_co->ftp_data.filepath));
+    check_ftp(&(curr_co->ftp_data));
+    // create the new file path 
+    strncpy(curr_co->ftp_data.filepath,curr_co->pwd,MAX_ROOT_PATH + MAX_PATH_SIZE);
+    strcat(curr_co->ftp_data.filepath,"/");
+    strncat(curr_co->ftp_data.filepath,curr_co->curr_args[0],
+           (MAX_ROOT_PATH + MAX_PATH_SIZE) - strlen(curr_co->ftp_data.filepath));
+    // set the file size received in command
     curr_co->ftp_data.file_size = atoi(curr_co->curr_args[1]);
-    // setup connection
+    printf("Expected file size : %zu \n",curr_co->ftp_data.file_size);
+    // setup connection for ftp
     error = setup_ftp_connection_server(curr_co);
     if(error){
         printf("Error : setup ftp connection failed \n");
         return error;
     }
+    // setup other ftp related fields
     curr_co->ftp_data.using_ftp = true;
     curr_co->ftp_data.ftp_type = FTP_RECV;
     curr_co->ftp_data.ftp_user = FTP_SERVER;
     curr_co->ftp_data.main_socket = curr_co->connection_socket;
     //spawn thread
     pthread_create(&(curr_co->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(curr_co->ftp_data));
-    // answer to client
+    //answer to client
     sprintf(curr_co->curr_out,"put port:    %d",curr_co->ftp_data.ftp_port);
     return 0;
 }
 
 int cmd_get(connection_t* curr_co){
     int error = 0;
+    check_ftp(&(curr_co->ftp_data));
+    strncpy(curr_co->ftp_data.filepath,curr_co->pwd,MAX_ROOT_PATH + MAX_PATH_SIZE);
+    strcat(curr_co->ftp_data.filepath,"/");
+    strncat(curr_co->ftp_data.filepath,curr_co->curr_args[0],
+           (MAX_ROOT_PATH + MAX_PATH_SIZE) - strlen(curr_co->ftp_data.filepath));
+    
+
 
     //curr_co->pwd
     return 0;
@@ -392,9 +397,9 @@ int cmd_get(connection_t* curr_co){
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     int i = 0;
     int token_num = 0;
-    // on recoit le premier token
-    char* token = strtok(in, " ");
-    // on met la condition i < 4 dans la boucle afin de garantir de ne pas tokeniser plus de 4 entrées
+    char input[MAX_INPUT_SIZE];
+    strncpy(input,in,MAX_INPUT_SIZE);
+    char* token = strtok(input, " ");
     while(token != NULL && i < MAX_TOKENS){
         token_num ++;
         strncpy(out[i],token,MAX_ARG_SIZE);

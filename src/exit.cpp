@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "exit.h"
 #include "utils.h"
+#include "ftp.h"
 
 data_t* prog_data = NULL;
 /**
@@ -17,19 +18,18 @@ void stop(int signum) {
         thread_end();
     }
     printf("Program Exiting : Cleaning up memory \n");
-	//reset signal handlers to default
     if(prog_data == NULL){
         printf("prog_data is null \n");
         exit(0);
     }
-	//signal(SIGTERM, SIG_DFL);
-	//signal(SIGINT, SIG_DFL);
     connection_t * tmp;
     for(auto c : prog_data->connections){
         pthread_kill(c->tid, SIGTERM);
         pthread_join(c->tid,NULL);
         printf("Killed user : [%s] \n",c->username);
         tmp = c;
+        printf("Killing any leftover ftp thread \n");
+        check_ftp(&(tmp->ftp_data));
         free(tmp->username);
         close(tmp->connection_socket);
         free(tmp);
