@@ -77,8 +77,10 @@ int check_dir(data_t* data) {
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("Current working dir: %s\n", cwd);
         strncpy(root_path, cwd, MAX_PATH_SIZE);
-        strcat(root_path, "/");
-        strcat(root_path, data->base_dir.c_str());
+        if(strcmp(data->base_dir.c_str(), ".") != 0) {
+            strcat(root_path, "/");
+            strcat(root_path, data->base_dir.c_str());
+        }
     } else {
         return -1;
     }
@@ -110,6 +112,20 @@ int check_dir(data_t* data) {
     Node* root = new Node();
     root->setFolderName(ROOT);
     data->root = root;
-    
+    return 0;
+}
 
+
+void findAndReplaceAll(std::string & data, std::string toSearch, std::string replaceStr) {
+	// Get the first occurrence
+	size_t pos = data.find(toSearch);
+ 
+	// Repeat till end is reached
+	while( pos != std::string::npos)
+	{
+		// Replace this occurrence of Sub String
+		data.replace(pos, toSearch.size(), replaceStr);
+		// Get the next occurrence from the current position
+		pos =data.find(toSearch, pos + replaceStr.size());
+	}
 }

@@ -41,6 +41,14 @@ int execute_system_cmd(const char *cmd,char* output,size_t size);
  * */
 int check_dir(data_t* data);
 
+/**
+ * @brief Finds and replaces all occurrences of a given substring
+ * 
+ * @param data the original string
+ * @param toSearch substring to find
+ * @param replaceStr the substring to replace with
+ * */
+void findAndReplaceAll(std::string & data, std::string toSearch, std::string replaceStr);
 
 
 
