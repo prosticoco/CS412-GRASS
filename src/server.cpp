@@ -59,8 +59,6 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     strncpy(tmp->pwd, data->root_path, MAX_PATH_SIZE);
     strncpy(tmp->root, data->root_path, MAX_PATH_SIZE);
     printf("Connection PWD : %s\n", tmp->pwd);
-    tmp->root_node = data->root;
-    tmp->curr_node = data->root;
     err = pthread_mutex_init(&(tmp->ftp_data.clean_lock),NULL);
     if(err){
         printf("Error Init ftp mutex \n");
@@ -115,32 +113,6 @@ void *handle_client(void* ptr){
     return (void *) 0; 
 }
 
-void error_handler(int err,connection_t* client){
-    switch(err) {
-        case ERROR_FOLDER_NAME_SIZE:
-            printf("ERROR : File/folder length too long\n");
-            strcpy(client->curr_out, "ERROR : File/folder length too long");
-            break;
-        case ERROR_INVALID_PATH:
-            printf("ERROR : Invalid path\n");
-            strcpy(client->curr_out,"ERROR : Invalid path");
-            break;
-        case ERROR_ACCESS_DENIED:
-            printf("ERROR : Access denied\n");
-            strcpy(client->curr_out,"ERROR : Access denied");
-            break;
-        case ERROR_FILE_NOT_FOUND:
-            printf("ERROR : File not found\n");
-            strcpy(client->curr_out,"ERROR : File not found");
-            break;
-        case ERROR_DIRECTORY:
-            printf("ERROR : It is a directory\n");
-            strcpy(client->curr_out,"ERROR : It is a directory");
-            break;
-        default :
-            printf("ERROR : default error in command processing\n");
-    }
-}
 
 
 /**

@@ -13,8 +13,6 @@
 #include "utils.h"
 #include "grass.h"
 #include "error.h"
-#include "path.h"
-
 
 void add_connection(data_t * data, connection_t * connection){
     pthread_mutex_lock(&(data->vector_protect));
@@ -109,9 +107,7 @@ int check_dir(data_t* data) {
     }
 
     strncpy(data->root_path, root_path, MAX_INPUT_SIZE);
-    Node* root = new Node();
-    root->setFolderName(ROOT);
-    data->root = root;
+    
     return 0;
 }
 
@@ -128,4 +124,43 @@ void findAndReplaceAll(std::string & data, std::string toSearch, std::string rep
 		// Get the next occurrence from the current position
 		pos =data.find(toSearch, pos + replaceStr.size());
 	}
+}
+
+void error_handler(int err,connection_t* client){
+    switch(err) {
+        case ERROR_FOLDER_NAME_SIZE:
+            printf("ERROR : File/folder length too long\n");
+            strcpy(client->curr_out, "ERROR : File/folder length too long");
+            break;
+        case ERROR_INVALID_PATH:
+            printf("ERROR : Invalid path\n");
+            strcpy(client->curr_out,"ERROR : Invalid path");
+            break;
+        case ERROR_ACCESS_DENIED:
+            printf("ERROR : Access denied\n");
+            strcpy(client->curr_out,"ERROR : Access denied");
+            break;
+        case ERROR_FILE_NOT_FOUND:
+            printf("ERROR : File not found\n");
+            strcpy(client->curr_out,"ERROR : File not found");
+            break;
+        case ERROR_ARGUMENT_SIZE:
+            printf("ERROR : Argument is too long\n");
+            strcpy(client->curr_out,"ERROR : Argument is too long");
+            break;
+        case ERROR_DIRECTORY:
+            printf("ERROR : It is a directory\n");
+            strcpy(client->curr_out,"ERROR : It is a directory");
+            break;
+        case ERROR_USERNAME_SIZE:
+            printf("ERROR : Invalid username\n");
+            strcpy(client->curr_out,"ERROR : Invalid username");
+            break;
+        case ERROR_PASSWORD_SIZE:
+            printf("ERROR : Invalid password\n");
+            strcpy(client->curr_out,"ERROR : Invalid password");
+            break;
+        default :
+            printf("ERROR : default error in command processing\n");
+    }
 }

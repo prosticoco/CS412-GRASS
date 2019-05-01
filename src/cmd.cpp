@@ -38,13 +38,12 @@ int process_cmd(connection_t * curr_co){
         printf("Error null command or too long \n");
         return ERROR_NULL;
     }
-    std::cout << "Processing cmd" << std::endl;
     curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
     if(num_tokens <= 0){
-        printf("Error : Tokenizer : %d \n",num_tokens);
-        return ERROR_TOKEN;
+        printf("ERROR : Tokenizer : %d \n",num_tokens);
+        return 0;
     }
     int i = 0;
     int err = 0;
@@ -85,27 +84,35 @@ int process_cmd(connection_t * curr_co){
 
 
 int cmd_login(connection_t* curr_co){
-    printf("Logging in \n");
+    printf("Login attempt\n");
+    if(strlen(curr_co->curr_args[0])>= MAX_USERNAME_SIZE) {
+        return ERROR_USERNAME_SIZE;
+    }
     curr_co->ready_for_check = true;
-    strncpy(curr_co->username,curr_co->curr_args[0],MAX_USERNAME_SIZE);
+    strncpy(curr_co->tmp_username,curr_co->curr_args[0],MAX_USERNAME_SIZE);
     strcpy(curr_co->curr_out,"Please provide your password");
     return 0;
 }
 
 int cmd_pass(connection_t * curr_co){
+    if(strlen(curr_co->curr_args[0]) >= MAX_PASSWORD_SIZE) {
+        return ERROR_PASSWORD_SIZE;
+    }
+
     if(curr_co->auth) {
-        strncpy(curr_co->curr_out,"User already authentified", MAX_ARG_SIZE);
+        strcpy(curr_co->curr_out,"User already authentified");
         return 0;
     }
     if(!(curr_co->ready_for_check)){
-        strncpy(curr_co->curr_out,"Please provide a username first", MAX_ARG_SIZE);
+        strcpy(curr_co->curr_out,"Please provide a username first");
         return 0;
     }    
     bool found = false;
     for(auto& user : curr_co->server_data->users) {
-        if( strncmp(user->uname, curr_co->username, strlen(user->uname)) == 0) {
+        if( strncmp(user->uname, curr_co->tmp_username, strlen(user->uname)) == 0) {
             if(strncmp(curr_co->curr_args[0], user->pass,  strlen(user->pass))== 0) {
                 curr_co->auth = true;
+                strncpy(curr_co->username, curr_co->tmp_username, MAX_USERNAME_SIZE);
                 strncpy(curr_co->curr_out,"Authentication successful", MAX_ARG_SIZE);
                 found = true;
                 break;
@@ -114,19 +121,20 @@ int cmd_pass(connection_t * curr_co){
         
     }
     if(!found) {
-        strcpy(curr_co->curr_out,"Invalid credentials");     
+        printf("Login failed\n");
+        strcpy(curr_co->curr_out,"Invalid credentials");   
     }
+    printf("[%s] : login\n", curr_co->username);
+
     curr_co->ready_for_check = false;
     return 0;
 }
 
 int cmd_w(connection_t* curr_co) {
-
+    printf("[%s] : w\n", curr_co->username);
     // there is always at least one user authentified
-    std::cout << "Command W" << std::endl;
     for (auto co : curr_co->server_data->connections) {
         if (co->auth) {
-            std::cout << "User authentified : " << co->username << std::endl;        
             strncat(curr_co->curr_out, co->username, MAX_ARG_SIZE);
             strcat(curr_co->curr_out, " ");
         }
@@ -135,6 +143,14 @@ int cmd_w(connection_t* curr_co) {
 }
 
 int cmd_ping(connection_t* curr_co) {
+    printf("[%s] : ping ", curr_co->username);
+
+    if(strlen(curr_co->curr_args[0]) >= MAX_ARG_SIZE) {
+        printf("- FAIL");
+        return ERROR_ARGUMENT_SIZE;
+    }
+
+    printf("%s\n", curr_co->curr_args[0]);
 
     char cmd[MAX_INPUT_SIZE];
     bzero(cmd,MAX_INPUT_SIZE);
@@ -142,53 +158,62 @@ int cmd_ping(connection_t* curr_co) {
     printf("%s\n", curr_co->curr_args[0]);
     char out[MAX_INPUT_SIZE];
     bzero(out,MAX_INPUT_SIZE);
-    execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
 
-    return 0;
+    return err;
 }
 
 int cmd_date(connection_t* curr_co) {
+    printf("[%s] : date\n", curr_co->username);
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
-    execute_system_cmd("date", out, MAX_INPUT_SIZE);
+    int err = execute_system_cmd("date", out, MAX_INPUT_SIZE);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
-    return 0;
+    return err;
 }
 
 int cmd_whoami(connection_t* curr_co) {
-    strncpy(curr_co->curr_out, curr_co->username, MAX_USERNAME_SIZE + 1);
+    printf("[%s] : whoami\n", curr_co->username);
+    strncpy(curr_co->curr_out, curr_co->username, MAX_USERNAME_SIZE);
     return 0;
 }
 
 int cmd_logout(connection_t* curr_co) {
+    printf("[%s] : logout\n", curr_co->username);
     curr_co->auth = false;
-    curr_co->curr_node = curr_co->root_node;
     strncpy(curr_co->pwd, curr_co->root, MAX_PATH_SIZE);
     strncpy(curr_co->curr_out, "User is logged out", MAX_ARG_SIZE);
     return 0;
 }
 
 int cmd_exit(connection_t* curr_co) {
+    printf("[%s] : exit\n", curr_co->username);
     curr_co->exit = true;
     strncpy(curr_co->curr_out, "", MAX_ARG_SIZE);
     return 0;
 }
 
 int cmd_ls(connection_t* curr_co) {
-    printf("--- ls ---\n");
+    printf("[%s] : ls\n", curr_co->username);
     char cmd[MAX_INPUT_SIZE] = "ls -l ";
     strncat(cmd, curr_co->pwd, MAX_PATH_SIZE);
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
-    execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
-    printf("Output : %s\n", out);
+    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
-    return 0;
+    return err;
 }
 
 int cmd_mkdir(connection_t* curr_co) {
-    printf("--- mkdir ---\n");
+    printf("[%s] : mkdir ", curr_co->username);
+
+    if(strlen(curr_co->curr_args[0]) >= MAX_FOLDER_NAME_SIZE) {
+        printf("- FAIL\n");
+        return ERROR_FOLDER_NAME_SIZE;
+    }
+    printf("%s\n", curr_co->curr_args[0]);
+
     char cmd[MAX_INPUT_SIZE] = "mkdir ";
     char dir_path[MAX_PATH_SIZE];
     bzero(dir_path, MAX_PATH_SIZE);
@@ -205,29 +230,25 @@ int cmd_mkdir(connection_t* curr_co) {
 
     char out[MAX_INPUT_SIZE];
     bzero(out,MAX_INPUT_SIZE);
-    printf("Mkdir command : %s\n", cmd);
-    execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     if (strlen(out) > 0) {
         //fail
         strcpy(curr_co->curr_out, "Mkdir failed to create directory");
     } else {
         strcpy(curr_co->curr_out, "Creation successful");
-        Node* child = new Node();
-        child->setParent(curr_co->curr_node);
-        child->setFolderName(curr_co->curr_args[0]);
-
-        curr_co->root_node->addChildAt(child, splitted_path[tokens-1]);
-
     }
 
-    return 0;
+    return err;
 }
 
 int cmd_cd(connection_t* curr_co) {
-    printf("--- cd ---\n");
+    printf("[%s] : cd ", curr_co->username);
     if(strlen(curr_co->curr_args[0]) > MAX_PATH_SIZE) {
+        printf("- FAIL\n");
         return ERROR_MAX_PATH_SIZE;
     }
+
+    printf("%s\n", curr_co->curr_args[0]);
 
     //testing
     char cd[MAX_PATH_SIZE];
@@ -248,11 +269,13 @@ int cmd_cd(connection_t* curr_co) {
     printf("Return from syscall : %s\n", out);
     
     if(strlen(out) == 0) {
+        printf("- FAIL\n");
         sprintf(curr_co->curr_out, "Invalid path");
         return 0;
     }
 
     if(strncmp(out, curr_co->root, strlen(curr_co->root)) != 0) {
+        printf("- FAIL\n");
         return ERROR_ACCESS_DENIED;
     }
 
@@ -271,9 +294,12 @@ int cmd_cd(connection_t* curr_co) {
 }
 
 int cmd_rm(connection_t* curr_co) {
+    printf("[%s] : rm ", curr_co->username);
     if(strlen(curr_co->curr_args[0]) > MAX_FOLDER_NAME_SIZE) {
+        printf("- FAIL\n");
         return ERROR_FOLDER_NAME_SIZE;
     }
+    printf("%s\n", curr_co->curr_args[0]);
     char cmd[MAX_INPUT_SIZE];
     bzero(cmd, MAX_INPUT_SIZE);
     strcpy(cmd, "rm -r ");
@@ -366,14 +392,20 @@ int cmd_get(connection_t* curr_co){
 }
 
 int cmd_grep(connection_t* curr_co) {
-    printf("--- grep ---\n");
+    printf("[%s] : grep ", curr_co->username);
+
+    if(strlen(curr_co->curr_args[0]) >= MAX_ARG_SIZE ) {
+        printf("- FAIL\n");
+        return ERROR_ARGUMENT_SIZE;
+    }
+    printf("%s\n", curr_co->curr_args[0]);
     char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
     bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
     sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
     std::cout << cmd << std::endl;
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);
-    execute_system_cmd(cmd,out,4*MAX_OUTPUT_SIZE);
+    int err = execute_system_cmd(cmd,out,4*MAX_OUTPUT_SIZE);
     if(strlen(out) > 0) {
         std::string tmp(out);
         findAndReplaceAll(tmp,curr_co->root,"");
@@ -381,7 +413,7 @@ int cmd_grep(connection_t* curr_co) {
     } else {
         strcpy(curr_co->curr_out, "No match");
     }
-    return 0;
+    return err;
 }
 
 int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){

@@ -17,7 +17,6 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <vector>
-#include "path.h"
 
 #define MAX_ARG_SIZE 128
 #define MAX_USERNAME_SIZE 32
@@ -33,12 +32,10 @@
 #define MAX_ROOT_PATH 256
 #define MAX_FILE_SIZE 4294967296
 #define MAX_FILENAME_SIZE 32
+#define MAX_FOLDER_NAME_SIZE 32
 #define MAX_MARGIN 32
 #define ROOT_DIR_NAME "/root"
 #define ROOT "root"
-
-
-
 #define FTP_SEND 0
 #define FTP_RECV 1
 #define FTP_CLIENT 0
@@ -84,7 +81,6 @@ typedef struct{
     std::vector<connection_t *> connections;
     pthread_mutex_t vector_protect;
     char root_path[MAX_PATH_SIZE];
-    Node* root;
 }data_t;
 
 struct ftp_data_t{
@@ -107,6 +103,7 @@ struct connection_t{
     data_t * server_data;
     int connection_socket;
     char * username;
+    char tmp_username[MAX_USERNAME_SIZE];
     bool auth;
     bool ready_for_check;
     bool exit;
@@ -115,9 +112,7 @@ struct connection_t{
     char relative_pwd[MAX_PATH_SIZE];
     char pwd[MAX_ROOT_PATH+MAX_PATH_SIZE];
     char root[MAX_ROOT_PATH];
-    char (*curr_args)[MAX_ARG_SIZE];
-    Node* root_node;
-    Node* curr_node; 
+    char (*curr_args)[MAX_ARG_SIZE]; 
     ftp_data_t ftp_data;
 };
 
@@ -137,9 +132,6 @@ struct client_t{
 extern data_t* prog_data;
 
 void hijack_flow();
-
-void error_handler(int err,connection_t* curr_co);
-
 
 void *client_reader(void* ptr);
 

@@ -50,7 +50,13 @@ int check_dir(data_t* data);
  * */
 void findAndReplaceAll(std::string & data, std::string toSearch, std::string replaceStr);
 
-
+/**
+ * @brief Handles errors
+ * 
+ * @param err the error code
+ * @param curr_co the current client connection where the function will output the error message
+ * */
+void error_handler(int err,connection_t* curr_co);
 
 
 
