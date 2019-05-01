@@ -79,10 +79,19 @@ int check_input(char* input,size_t size,client_t* client){
                 strcat(client->ftp_data.filepath,"/");
                 strncat(client->ftp_data.filepath,splitted_input[1],MAX_FILENAME_SIZE);
                 client->ftp_data.file_size = atoi(splitted_input[2]);
-                client->ftp_data.using_ftp = true;             
+                //client->ftp_data.using_ftp = true;             
             }
         }
         if(!strcmp("get",splitted_input[0])){
+            if(num_tokens > 1){
+                // check if ftp is already in use
+                check_ftp(&(client->ftp_data));
+                // update the file path
+                strncpy(client->ftp_data.filepath,client->cwd,MAX_ROOT_PATH);
+                strcat(client->ftp_data.filepath,"/");
+                strncat(client->ftp_data.filepath,splitted_input[1],MAX_FILENAME_SIZE);
+                //client->ftp_data.using_ftp = true;
+            }
 
         }
 
@@ -103,11 +112,27 @@ int check_response(char* response,size_t size,client_t* client){
                 pthread_mutex_lock(&(client->ftp_data.clean_lock));
                 client->ftp_data.ftp_port = atoi(splitted_response[2]);
                 client->ftp_data.ftp_type = FTP_SEND;
+                client->ftp_data.using_ftp = true;
                 pthread_mutex_unlock(&(client->ftp_data.clean_lock));
                 pthread_create(&(client->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(client->ftp_data));
             }
         }
+        if(!strcmp("get",splitted_response[0])){
+            // check response has enough tokens
+            if(num_tokens > 4){
+                // update atomically the fields related to ftp response
+                pthread_mutex_lock(&(client->ftp_data.clean_lock));
+                client->ftp_data.ftp_port = atoi(splitted_response[2]);
+                client->ftp_data.file_size = atoi(splitted_response[4]);
+                client->ftp_data.ftp_type = FTP_RECV;
+                client->ftp_data.using_ftp = true;
+                pthread_mutex_unlock(&(client->ftp_data.clean_lock));
+                // spawn the thread which will receive the file
+                pthread_create(&(client->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(client->ftp_data));
+            }
+        }
     }
+    // return the number of tokens
     return num_tokens;
 }
 

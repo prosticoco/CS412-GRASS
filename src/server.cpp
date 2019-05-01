@@ -105,17 +105,25 @@ void *handle_client(void* ptr){
         if(err < 0){
             //todo handle all errors
             switch(err) {
-                case ERROR_FOLDER_NAME_SIZE :
+                case ERROR_FOLDER_NAME_SIZE:
                     printf("ERROR : File/folder length too long\n");
                     strcpy(client->curr_out, "ERROR : File/folder length too long");
                     break;
-                case ERROR_INVALID_PATH :
+                case ERROR_INVALID_PATH:
                     printf("ERROR : Invalid path\n");
                     strcpy(client->curr_out,"ERROR : Invalid path");
                     break;
                 case ERROR_ACCESS_DENIED:
                     printf("ERROR : Access denied\n");
                     strcpy(client->curr_out,"ERROR : Access denied");
+                    break;
+                case ERROR_FILE_NOT_FOUND:
+                    printf("ERROR : File not found\n");
+                    strcpy(client->curr_out,"ERROR : File not found");
+                    break;
+                case ERROR_DIRECTORY:
+                    printf("ERROR : It is a directory\n");
+                    strcpy(client->curr_out,"ERROR : It is a directory");
                     break;
                 default :
                     printf("ERROR : default error in command processing\n");

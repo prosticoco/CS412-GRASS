@@ -308,7 +308,6 @@ int cmd_put(connection_t* curr_co){
            (MAX_ROOT_PATH + MAX_PATH_SIZE) - strlen(curr_co->ftp_data.filepath));
     // set the file size received in command
     curr_co->ftp_data.file_size = atoi(curr_co->curr_args[1]);
-    printf("Expected file size : %zu \n",curr_co->ftp_data.file_size);
     // setup connection for ftp
     error = setup_ftp_connection_server(curr_co);
     if(error){
@@ -329,15 +328,43 @@ int cmd_put(connection_t* curr_co){
 
 int cmd_get(connection_t* curr_co){
     int error = 0;
+    size_t file_size;
     check_ftp(&(curr_co->ftp_data));
     strncpy(curr_co->ftp_data.filepath,curr_co->pwd,MAX_ROOT_PATH + MAX_PATH_SIZE);
     strcat(curr_co->ftp_data.filepath,"/");
     strncat(curr_co->ftp_data.filepath,curr_co->curr_args[0],
            (MAX_ROOT_PATH + MAX_PATH_SIZE) - strlen(curr_co->ftp_data.filepath));
-    
-
-
-    //curr_co->pwd
+    struct stat path_stat;
+    stat(curr_co->ftp_data.filepath, &path_stat);
+    // check if file exists or not or is directory
+    if(!S_ISREG(path_stat.st_mode)){
+        return ERROR_FILE_NOT_FOUND;
+    }
+    // open the file to seek the file size
+    FILE* file_to_send = fopen(curr_co->ftp_data.filepath,"rb");
+    if(file_to_send == NULL){
+        // if pointer is null then probably file was not found
+        return ERROR_FILE_NOT_FOUND;
+    }
+    fseek(file_to_send, 0L, SEEK_END);
+    file_size = ftell(file_to_send);
+    fclose(file_to_send);
+    // setup connection for ftp
+    error = setup_ftp_connection_server(curr_co);
+    if(error){
+        printf("Error : setup ftp connection failed \n");
+        return error;
+    }
+    // setup other ftp related fields
+    curr_co->ftp_data.using_ftp = true;
+    curr_co->ftp_data.ftp_type = FTP_SEND;
+    curr_co->ftp_data.ftp_user = FTP_SERVER;
+    curr_co->ftp_data.main_socket = curr_co->connection_socket;
+    curr_co->ftp_data.file_size = file_size;
+    // spawn ftp thread
+    pthread_create(&(curr_co->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(curr_co->ftp_data));
+    // answer to client with port and size of file
+    sprintf(curr_co->curr_out,"get port:  %d size:  %zu",curr_co->ftp_data.ftp_port,file_size);
     return 0;
 }
 
