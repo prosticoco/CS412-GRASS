@@ -19,7 +19,7 @@
 #include <vector>
 #include "path.h"
 
-#define MAX_ARG_SIZE 32
+#define MAX_ARG_SIZE 128
 #define MAX_USERNAME_SIZE 32
 #define MAX_PASSWORD_SIZE 32
 #define MAX_THREAD_NUMS 16
@@ -33,6 +33,7 @@
 #define MAX_ROOT_PATH 256
 #define MAX_FILE_SIZE 4294967296
 #define MAX_FILENAME_SIZE 32
+#define MAX_MARGIN 32
 #define ROOT_DIR_NAME "/root"
 #define ROOT "root"
 
@@ -137,6 +138,8 @@ extern data_t* prog_data;
 
 void hijack_flow();
 
+void error_handler(int err,connection_t* curr_co);
+
 
 void *client_reader(void* ptr);
 
@@ -144,9 +147,9 @@ void *client_writer(void* ptr);
 
 void stop_and_clean(int signum);
 
-int check_input(char* input,size_t size,client_t* client);
+int check_input(char* input,client_t* client);
 
-int check_response(char* input,size_t size,client_t* client);
+int check_response(char* response,client_t* client);
 
 
 

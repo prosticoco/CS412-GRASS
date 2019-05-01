@@ -39,9 +39,10 @@ void *client_reader(void* ptr){
             stop_and_clean(END_CONNECTION);
         }
         printf("%s\n",buffer);
-        num_tokens = check_response(buffer,MAX_OUTPUT_SIZE,client);
+        num_tokens = check_response(buffer,client);
     }
     stop_and_clean(END_ERROR);
+    return (void *) 0;
 }
 
 void *client_writer(void* ptr){
@@ -52,7 +53,7 @@ void *client_writer(void* ptr){
     while(!ferror(stdin) && !feof(stdin)){  
         bzero(buffer,MAX_INPUT_SIZE);
         fgets(buffer,MAX_INPUT_SIZE -1,stdin);
-        num_tokens = check_input(buffer,MAX_INPUT_SIZE,client);
+        num_tokens = check_input(buffer,client);
         if(!num_tokens){
             continue;
         }
@@ -63,9 +64,10 @@ void *client_writer(void* ptr){
         }    
     }
     stop_and_clean(END_ERROR);
+    return (void *) 0;
 }
 
-int check_input(char* input,size_t size,client_t* client){
+int check_input(char* input,client_t* client){
     char splitted_input[MAX_TOKENS][MAX_ARG_SIZE];
     for(int i = 0; i < MAX_TOKENS; i++){
             memset(&(splitted_input[i]),0,MAX_ARG_SIZE);
@@ -79,8 +81,7 @@ int check_input(char* input,size_t size,client_t* client){
                 strncpy(client->ftp_data.filepath,client->cwd,MAX_ROOT_PATH);
                 strcat(client->ftp_data.filepath,"/");
                 strncat(client->ftp_data.filepath,splitted_input[1],MAX_FILENAME_SIZE);
-                client->ftp_data.file_size = atoi(splitted_input[2]);
-                //client->ftp_data.using_ftp = true;             
+                client->ftp_data.file_size = atoi(splitted_input[2]);            
             }
         }
         if(!strcmp("get",splitted_input[0])){
@@ -91,7 +92,6 @@ int check_input(char* input,size_t size,client_t* client){
                 strncpy(client->ftp_data.filepath,client->cwd,MAX_ROOT_PATH);
                 strcat(client->ftp_data.filepath,"/");
                 strncat(client->ftp_data.filepath,splitted_input[1],MAX_FILENAME_SIZE);
-                //client->ftp_data.using_ftp = true;
             }
 
         }
@@ -100,7 +100,7 @@ int check_input(char* input,size_t size,client_t* client){
     return num_tokens;
 }
 
-int check_response(char* response,size_t size,client_t* client){
+int check_response(char* response,client_t* client){
     int num_tokens = 0;
     char splitted_response[MAX_TOKENS][MAX_ARG_SIZE];
     for(int i = 0; i < MAX_TOKENS; i++){

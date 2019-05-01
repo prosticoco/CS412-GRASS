@@ -41,9 +41,6 @@ int process_cmd(connection_t * curr_co){
     std::cout << "Processing cmd" << std::endl;
     curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
-    //for(int i = 0; i < MAX_TOKENS; i++){
-      //  memset(&(splitted_cmd[i]),0,MAX_ARG_SIZE);
-    //}
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
     if(num_tokens <= 0){
         printf("Error : Tokenizer : %d \n",num_tokens);
@@ -235,8 +232,8 @@ int cmd_cd(connection_t* curr_co) {
     //testing
     char cd[MAX_PATH_SIZE];
     bzero(cd, MAX_PATH_SIZE);
-    char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH];
-    bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH);
+    char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE];
+    bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE);
     char out[MAX_OUTPUT_SIZE];
     bzero(out, MAX_OUTPUT_SIZE);
     
@@ -370,8 +367,8 @@ int cmd_get(connection_t* curr_co){
 
 int cmd_grep(connection_t* curr_co) {
     printf("--- grep ---\n");
-    char cmd[MAX_INPUT_SIZE];
-    bzero (cmd, MAX_INPUT_SIZE);
+    char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
+    bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
     sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
     std::cout << cmd << std::endl;
     char out[4*MAX_OUTPUT_SIZE];
@@ -394,6 +391,9 @@ int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
     strncpy(input,in,MAX_INPUT_SIZE);
     char* token = strtok(input, " ");
     while(token != NULL && i < MAX_TOKENS){
+        if(strlen(token) > MAX_ARG_SIZE){
+            return ERROR_ARGUMENT_SIZE;
+        }
         token_num ++;
         strncpy(out[i],token,MAX_ARG_SIZE);
         token = strtok(NULL," ");      
