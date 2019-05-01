@@ -140,6 +140,11 @@ void hijack_flow();
 
 void error_handler(int err,connection_t* curr_co);
 
+// prototype for client handler
+void *handle_client(void* curr_co);
+// prototype to create a new thread for a client
+int init_connection(int socket,connection_t* co,data_t* data);
+
 
 void *client_reader(void* ptr);
 

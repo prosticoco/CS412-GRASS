@@ -32,16 +32,17 @@ void *client_reader(void* ptr){
         n = read(client->ftp_data.main_socket,buffer,MAX_OUTPUT_SIZE);
         if (n < 0) {
             printf("ERROR reading from socket\n");
-            stop_and_clean(END_ERROR);
+            pthread_kill(client->main,SIGTERM);
+            break;
         }
         if(n == 0) {
             printf("End of connection \n");
-            stop_and_clean(END_CONNECTION);
+            pthread_kill(client->main,SIGTERM);
+            break;
         }
         printf("%s\n",buffer);
         num_tokens = check_response(buffer,client);
     }
-    stop_and_clean(END_ERROR);
     return (void *) 0;
 }
 
@@ -60,10 +61,11 @@ void *client_writer(void* ptr){
         n = write(client->ftp_data.main_socket,buffer,strlen(buffer));
         if (n < 0){
             cout <<"ERROR writing to socket" << endl;
-            stop_and_clean(END_ERROR);
+            pthread_kill(client->main,SIGTERM);
+            return (void *) 0;
         }    
     }
-    stop_and_clean(END_ERROR);
+    pthread_kill(client->main,SIGTERM);
     return (void *) 0;
 }
 
@@ -137,27 +139,18 @@ int check_response(char* response,client_t* client){
     return num_tokens;
 }
 
-void stop_and_clean(int signum){
-    if(signum == END_ERROR){
-        printf("Error reader/writer\n");
-    }
-    if(signum == END_CONNECTION){
-        printf("Lost connection to server \n");
-    }
+void stop_and_clean(int signum){  
     if(pthread_self() == client_data.main){
-        printf("Stopping reader\n");
-        pthread_kill(client_data.reader, SIGTERM);
-        pthread_join(client_data.reader,NULL);
-        printf("Stopping write\n");
-        pthread_kill(client_data.writer, SIGTERM);
-        pthread_join(client_data.writer,NULL);
-        printf("killing any leftover ftp thread\n");
+        if(signum == END_ERROR){
+            printf("Error reader/writer\n");
+        }
+        if(signum == END_CONNECTION){
+            printf("Lost connection to server \n");
+        }
+        pthread_cancel(client_data.reader);
+        pthread_cancel(client_data.writer);
         check_ftp(&(client_data.ftp_data));
-    }else{
-        if(!stop){
-            stop = true;
-            pthread_kill(client_data.main,SIGTERM);
-        }     
+    }else{    
         pthread_exit((void *)0);  
     }
     cout << "Stopping connection and exiting" << endl; 
@@ -169,8 +162,7 @@ void stop_and_clean(int signum){
 }
 int init(client_t* client,char** argv) {
     signal(SIGTERM, stop_and_clean);
-	signal(SIGINT, stop_and_clean); 
-
+	signal(SIGINT, stop_and_clean);
     int error = 0;
     int sock = -1;
     memset(&client_data,0,sizeof(client_t));
