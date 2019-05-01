@@ -17,6 +17,7 @@
 using namespace std;
 int BUFFER_READ_MAX_SIZE = 1024;
 client_t client_data;
+bool stop = false;
 
 
 
@@ -153,7 +154,10 @@ void stop_and_clean(int signum){
         printf("killing any leftover ftp thread\n");
         check_ftp(&(client_data.ftp_data));
     }else{
-        pthread_kill(client_data.main,SIGTERM);
+        if(!stop){
+            stop = true;
+            pthread_kill(client_data.main,SIGTERM);
+        }     
         pthread_exit((void *)0);  
     }
     cout << "Stopping connection and exiting" << endl; 
@@ -176,7 +180,6 @@ int init(client_t* client,char** argv) {
     //initialise connection
     client->portno = atoi(argv[2]);
     client->main = pthread_self();
-    printf("Client main is : [%lu] \n",client->main);
     pthread_mutex_init(&(client->ftp_data.clean_lock),NULL);
     pthread_mutex_init(&(client->lock),NULL);
     error = setup_client_co(argv[1],client->portno,&sock);

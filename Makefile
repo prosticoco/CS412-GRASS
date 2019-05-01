@@ -1,27 +1,30 @@
 SRCDIR   = src
 BINDIR   = bin
 INCLUDES = include
-OBJS = utils.o cmd.o ftp.o exit.o  path.o
+OBJS = $(BINDIR)/utils.o $(BINDIR)/cmd.o $(BINDIR)/ftp.o $(BINDIR)/exit.o  $(BINDIR)/path.o
 
 CC=g++
 CFLAGS=-Wall -Wextra -g -fno-stack-protector -fsanitize=undefined -pthread -z execstack  -std=gnu11 -I $(INCLUDES)/ -m32 
 DEPS = $(wildcard $(INCLUDES)/%.h)
 
-all: utils.o exit.o ftp.o cmd.o path.o $(BINDIR)/client  $(BINDIR)/server $(DEPS)
+all: $(BINDIR)/utils.o $(BINDIR)/exit.o $(BINDIR)/ftp.o $(BINDIR)/cmd.o $(BINDIR)/path.o $(BINDIR)/client  $(BINDIR)/server $(DEPS)
+
+$(BINDIR):
+	mkdir -p $(BINDIR)
  
-path.o : $(SRCDIR)/path.cpp $(INCLUDES)/path.h
+$(BINDIR)/path.o : $(SRCDIR)/path.cpp $(INCLUDES)/path.h
 		$(CC) -c $(CFLAGS) $< -o $@
 
-ftp.o : $(SRCDIR)/ftp.cpp $(INCLUDES)/ftp.h
+$(BINDIR)/ftp.o : $(SRCDIR)/ftp.cpp $(INCLUDES)/ftp.h
 		$(CC) -c $(CFLAGS) $< -o $@
 
-cmd.o : $(SRCDIR)/cmd.cpp $(INCLUDES)/cmd.h
+$(BINDIR)/cmd.o : $(SRCDIR)/cmd.cpp $(INCLUDES)/cmd.h
 		$(CC) -c $(CFLAGS) $< -o $@ 
 
-exit.o : $(SRCDIR)/exit.cpp $(INCLUDES)/exit.h
+$(BINDIR)/exit.o : $(SRCDIR)/exit.cpp $(INCLUDES)/exit.h
 		$(CC) -c $(CFLAGS) $< -o $@ 
 
-utils.o : $(SRCDIR)/utils.cpp $(INCLUDES)/utils.h
+$(BINDIR)/utils.o : $(SRCDIR)/utils.cpp $(INCLUDES)/utils.h
 		$(CC) -c $(CFLAGS) $< -o $@ 
 
 $(BINDIR)/client: $(SRCDIR)/client.cpp $(OBJS)
@@ -32,4 +35,4 @@ $(BINDIR)/server: $(SRCDIR)/server.cpp $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f $(BINDIR)/client $(BINDIR)/server $(BINDIR)/servercpp $(BINDIR)/clientcpp 
+	rm -f $(BINDIR)/client $(BINDIR)/server $(BINDIR)/servercpp $(BINDIR)/clientcpp $(BINDIR)/utils.o $(BINDIR)/exit.o $(BINDIR)/ftp.o $(BINDIR)/cmd.o $(BINDIR)/path.o 
