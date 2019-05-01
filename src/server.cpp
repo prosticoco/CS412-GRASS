@@ -31,10 +31,7 @@ using namespace std;
 
 
 
-// prototype for client handler
-void *handle_client(void* curr_co);
-// prototype to create a new thread for a client
-int init_connection(int socket,connection_t* co,data_t* data);
+
 
 int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     int err = 0;
@@ -163,38 +160,6 @@ void accept_connections(data_t* data){
         
     }
 }
-// Helper function to run commands in unix.
-void run_command(const char* command, int sock);
-
-
-/*
- * Send a file to the client as its own thread
- *
- * fp: file descriptor of file to send
- * sock: socket that has already been created.
- */
-void send_file(int fp, int sock);
-
-/*
- * Send a file to the server as its own thread
- *
- * fp: file descriptor of file to save to.
- * sock: socket that has already been created.
- * size: the size (in bytes) of the file to recv
- */
-void recv_file(int fp, int sock, int size);
-
-// Server side REPL given a socket file descriptor
-void *connection_handler(void* sockfd);
-
-/*
- * search all files in the current directory
- * and its subdirectory for the pattern
- *
- * pattern: an extended regular expressions.
- * Output: A line seperated list of matching files' addresses
- */
-void search(char *pattern);
 
 // Parse the grass.conf file and fill in the global variables
 void parse_grass(data_t * data) {

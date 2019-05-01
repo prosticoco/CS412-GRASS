@@ -133,6 +133,12 @@ extern data_t* prog_data;
 
 void hijack_flow();
 
+// prototype for client handler
+void *handle_client(void* curr_co);
+// prototype to create a new thread for a client
+int init_connection(int socket,connection_t* co,data_t* data);
+
+
 void *client_reader(void* ptr);
 
 void *client_writer(void* ptr);

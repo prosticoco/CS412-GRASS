@@ -143,8 +143,11 @@ int cmd_w(connection_t* curr_co) {
 }
 
 int cmd_ping(connection_t* curr_co) {
-    printf("[%s] : ping ", curr_co->username);
-
+    if(curr_co->auth) {
+        printf("[%s] : ping ", curr_co->username);
+    } else {
+        printf("User not logged in : ping ");     
+    }
     if(strlen(curr_co->curr_args[0]) >= MAX_ARG_SIZE) {
         printf("- FAIL");
         return ERROR_ARGUMENT_SIZE;
@@ -155,7 +158,6 @@ int cmd_ping(connection_t* curr_co) {
     char cmd[MAX_INPUT_SIZE];
     bzero(cmd,MAX_INPUT_SIZE);
     sprintf(cmd, "ping %s -c 1", curr_co->curr_args[0]);
-    printf("%s\n", curr_co->curr_args[0]);
     char out[MAX_INPUT_SIZE];
     bzero(out,MAX_INPUT_SIZE);
     int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
@@ -188,7 +190,12 @@ int cmd_logout(connection_t* curr_co) {
 }
 
 int cmd_exit(connection_t* curr_co) {
-    printf("[%s] : exit\n", curr_co->username);
+    if(curr_co->auth) {
+        printf("[%s] : exit\n", curr_co->username);
+    } else {
+        printf("User not logged in : exit ");
+    
+    }
     curr_co->exit = true;
     strncpy(curr_co->curr_out, "", MAX_ARG_SIZE);
     return 0;
@@ -250,7 +257,6 @@ int cmd_cd(connection_t* curr_co) {
 
     printf("%s\n", curr_co->curr_args[0]);
 
-    //testing
     char cd[MAX_PATH_SIZE];
     bzero(cd, MAX_PATH_SIZE);
     char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE];
@@ -263,10 +269,8 @@ int cmd_cd(connection_t* curr_co) {
     } else {
         sprintf(new_path, "%s/%s", curr_co->root, curr_co->curr_args[0]);
     }
-    printf("%s\n", new_path);
     sprintf(cd, "cd %s && pwd", new_path);
     execute_system_cmd(cd,out, MAX_OUTPUT_SIZE);
-    printf("Return from syscall : %s\n", out);
     
     if(strlen(out) == 0) {
         printf("- FAIL\n");
@@ -281,7 +285,6 @@ int cmd_cd(connection_t* curr_co) {
 
     std::string relative_path(out);
     findAndReplaceAll(relative_path, curr_co->root, "");
-    std::cout << "Relative path : " << relative_path << std::endl;
     sprintf(curr_co->relative_pwd, relative_path.c_str(), MAX_PATH_SIZE);
     sprintf(curr_co->pwd, out, MAX_PATH_SIZE + MAX_ROOT_PATH);
     if(relative_path.size() <= 0) {
@@ -402,7 +405,6 @@ int cmd_grep(connection_t* curr_co) {
     char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
     bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
     sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
-    std::cout << cmd << std::endl;
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);
     int err = execute_system_cmd(cmd,out,4*MAX_OUTPUT_SIZE);
