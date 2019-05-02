@@ -41,9 +41,11 @@ int process_cmd(connection_t * curr_co){
     curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
-    if(num_tokens <= 0){
-        printf("ERROR : Tokenizer : %d \n",num_tokens);
+    if(num_tokens == 0){
         return 0;
+    }
+    if(num_tokens < 0){
+        return num_tokens;
     }
     int i = 0;
     int err = 0;

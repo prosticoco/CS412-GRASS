@@ -67,6 +67,7 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     return ret;
 }
 
+
 /**
  * @brief Function used by each thread to handle a client, this function will loop
  * and process each command request from the client, if the latter closes the connection

@@ -45,7 +45,7 @@ void stop_ftp_thread(ftp_data_t* ftp);
 
 void *ftp_subthread(void* ptr);
 
-void ftp_end(ftp_data_t * ftp);
+void ftp_end(ftp_data_t * ftp,bool exit);
 
 void check_ftp(ftp_data_t * ftp);
 

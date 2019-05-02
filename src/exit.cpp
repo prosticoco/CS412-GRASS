@@ -57,6 +57,7 @@ void stop(int signum) {
  */
 void thread_cleanup(connection_t* c){
     printf("Client : [%s] with tid : [%lu] Disconnection. \n",c->username,c->tid);
+    ftp_end(&(c->ftp_data),false);
     remove_connection(c->server_data,c);
     free(c->username);
     close(c->connection_socket);
