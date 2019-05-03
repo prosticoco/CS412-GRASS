@@ -58,7 +58,12 @@ void findAndReplaceAll(std::string & data, std::string toSearch, std::string rep
  * */
 void error_handler(int err,connection_t* curr_co);
 
-
-
+/**
+ * @brief Checks the given string for invalid characters
+ * 
+ * @param in the string to be checked
+ * @return true if the string does not contain invalid chars, false otherwise
+ * */
+bool checkInvalidChars(char * in);
 
 #endif

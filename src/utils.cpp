@@ -126,11 +126,28 @@ void findAndReplaceAll(std::string & data, std::string toSearch, std::string rep
 	}
 }
 
+bool checkInvalidChars(char * in) {
+    std::string toCheck(in);
+    std::string dict("&|;$><`\!");
+    for(size_t i = 0; i < dict.size(); i++) {
+        if (toCheck.find(dict.at(i)) != std::string::npos) {
+            // contains invalid char
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void error_handler(int err,connection_t* client){
     switch(err) {
         case ERROR_FOLDER_NAME_SIZE:
             printf("ERROR : File/folder length too long\n");
             strcpy(client->curr_out, "ERROR : File/folder length too long");
+            break;
+        case ERROR_INVALID_CHARS:
+            printf("ERROR : Arguments contain invalid characters\n");
+            strcpy(client->curr_out, "ERROR : Arguments contain invalid characters");
             break;
         case ERROR_INVALID_PATH:
             printf("ERROR : Invalid path\n");
@@ -159,6 +176,10 @@ void error_handler(int err,connection_t* client){
         case ERROR_PASSWORD_SIZE:
             printf("ERROR : Invalid password\n");
             strcpy(client->curr_out,"ERROR : Invalid password");
+            break;
+        case ERROR_PATH_NOT_SUPPORTED:
+            printf("ERROR : command does not support paths\n");
+            strcpy(client->curr_out,"ERROR : command does not support paths");
             break;
         default :
             printf("ERROR : default error in command processing\n");

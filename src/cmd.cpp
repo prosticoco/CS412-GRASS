@@ -40,6 +40,9 @@ int process_cmd(connection_t * curr_co){
     }
     curr_co->curr_in[strlen(curr_co->curr_in)-1] = '\0';
     char splitted_cmd[MAX_TOKENS][MAX_ARG_SIZE];
+    for (int i = 0; i < MAX_TOKENS; i++) {
+        bzero(splitted_cmd[i], MAX_ARG_SIZE);
+    }
     int num_tokens = tokenize_cmd(curr_co->curr_in,splitted_cmd);
     if(num_tokens <= 0){
         printf("ERROR : Tokenizer : %d \n",num_tokens);
@@ -48,6 +51,7 @@ int process_cmd(connection_t * curr_co){
     int i = 0;
     int err = 0;
     bool found = false;
+    
     while(i < NUM_COMMANDS && !found) {
         if(strncmp(splitted_cmd[0], cmds[i].name, MAX_ARG_SIZE) == 0) {
             found = true;
@@ -62,6 +66,8 @@ int process_cmd(connection_t * curr_co){
             if( cmds[i].authent) {
                 if(curr_co->auth) {
                     err = cmds[i].fct(curr_co);
+                    fflush(stdout);
+
                 } else {
                     strncpy(curr_co->curr_out,"Authentication required", MAX_ARG_SIZE);
                 }
@@ -77,7 +83,6 @@ int process_cmd(connection_t * curr_co){
         return err;
 
     } 
-
     return err;
 
 }
@@ -135,7 +140,7 @@ int cmd_w(connection_t* curr_co) {
     // there is always at least one user authentified
     for (auto co : curr_co->server_data->connections) {
         if (co->auth) {
-            strncat(curr_co->curr_out, co->username, MAX_ARG_SIZE);
+            strncat(curr_co->curr_out, co->username, MAX_USERNAME_SIZE);
             strcat(curr_co->curr_out, " ");
         }
     }
@@ -207,13 +212,29 @@ int cmd_ls(connection_t* curr_co) {
     strncat(cmd, curr_co->pwd, MAX_PATH_SIZE);
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
+    
     int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
     return err;
 }
 
 int cmd_mkdir(connection_t* curr_co) {
+    // from the description : "creates a new directory with the specified name in the current working directory"
+    // so if the argument is a path we throw an error because we expect a folder name
     printf("[%s] : mkdir ", curr_co->username);
+
+    std::string tmp ( curr_co->curr_args[0]);
+    
+    if (tmp.find("/") != std::string::npos) {
+        // its a path since it contains /
+        printf("- FAIL\n");
+        return ERROR_PATH_NOT_SUPPORTED;
+    }
+
+    //check for potential command injection
+    if(!checkInvalidChars(curr_co->curr_args[0])) {
+        return ERROR_INVALID_CHARS;
+    }
 
     if(strlen(curr_co->curr_args[0]) >= MAX_FOLDER_NAME_SIZE) {
         printf("- FAIL\n");
@@ -224,21 +245,15 @@ int cmd_mkdir(connection_t* curr_co) {
     char cmd[MAX_INPUT_SIZE] = "mkdir ";
     char dir_path[MAX_PATH_SIZE];
     bzero(dir_path, MAX_PATH_SIZE);
-    strncat(dir_path, curr_co->pwd, MAX_PATH_SIZE);
-    
-    char splitted_path[MAX_TOKENS_PATH][MAX_FOLDER_NAME_SIZE];
-    char in[MAX_PATH_SIZE];
-    bzero(in, MAX_PATH_SIZE);
-    strncpy(in, curr_co->pwd, MAX_PATH_SIZE);
-    int tokens = tokenize_path(in, splitted_path);
+    strncat(dir_path, curr_co->pwd, MAX_PATH_SIZE);    
     strcat(dir_path, "/" );
     strncat(dir_path, curr_co->curr_args[0], MAX_PATH_SIZE);
     strcat(cmd, dir_path);
 
     char out[MAX_INPUT_SIZE];
     bzero(out,MAX_INPUT_SIZE);
-    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
-    if (strlen(out) > 0) {
+    int err = mkdir(dir_path, ACCESSPERMS);
+    if (err) {
         //fail
         strcpy(curr_co->curr_out, "Mkdir failed to create directory");
     } else {
@@ -298,10 +313,26 @@ int cmd_cd(connection_t* curr_co) {
 
 int cmd_rm(connection_t* curr_co) {
     printf("[%s] : rm ", curr_co->username);
-    if(strlen(curr_co->curr_args[0]) > MAX_FOLDER_NAME_SIZE) {
+    
+    // from the description : "deletes the file or directory with the specified name in the current working directory"
+    // so if the argument is a path we throw an error because we expect a folder/file name
+      std::string tmp ( curr_co->curr_args[0]);
+    if (tmp.find("/") != std::string::npos) {
+        // its a path since it contains '/
+        printf("- FAIL\n");
+        return ERROR_PATH_NOT_SUPPORTED;
+    } 
+    //check for potential command injection
+    if(!checkInvalidChars(curr_co->curr_args[0])) {
+        printf("- FAIL\n");
+        return ERROR_INVALID_CHARS;
+    }
+    
+    if(strlen(curr_co->curr_args[0]) >= MAX_FOLDER_NAME_SIZE) {
         printf("- FAIL\n");
         return ERROR_FOLDER_NAME_SIZE;
     }
+
     printf("%s\n", curr_co->curr_args[0]);
     char cmd[MAX_INPUT_SIZE];
     bzero(cmd, MAX_INPUT_SIZE);
@@ -401,6 +432,11 @@ int cmd_grep(connection_t* curr_co) {
         printf("- FAIL\n");
         return ERROR_ARGUMENT_SIZE;
     }
+    //check for potential command injection
+    if(!checkInvalidChars(curr_co->curr_args[0])) {
+        return ERROR_INVALID_CHARS;
+    }
+
     printf("%s\n", curr_co->curr_args[0]);
     char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
     bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
@@ -439,12 +475,20 @@ int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
 int tokenize_path(char* path, char (*out)[MAX_FOLDER_NAME_SIZE]) {
     int i = 0;
     int token_num = 0;
-    char* token = strtok(path, "/");
-    while(token != NULL){
+    char input[MAX_INPUT_SIZE];
+    bzero(input, MAX_INPUT_SIZE);
+    strncpy(input,path,MAX_INPUT_SIZE);
+    char* token = strtok(input, "/");
+    while(token != NULL && i < MAX_TOKENS){
+        printf("Curr token : [%s]\n ", token);
+        if(strlen(token) > MAX_ARG_SIZE){
+            return ERROR_ARGUMENT_SIZE;
+        }
         token_num ++;
         strncpy(out[i],token,MAX_ARG_SIZE);
         token = strtok(NULL,"/");      
         i += 1;
     }
+    printf("Tokenize succeed \n");
     return token_num;
 }

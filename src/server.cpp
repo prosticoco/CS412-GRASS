@@ -30,9 +30,6 @@ char port[7] = "31337";
 using namespace std;
 
 
-
-
-
 int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     int err = 0;
     printf("Initializing new connection... \n");
@@ -100,6 +97,7 @@ void *handle_client(void* ptr){
         if(err < 0){
            error_handler(err,client);
         }
+        
         b = write(client->connection_socket,client->curr_out,strlen(client->curr_out));
         if(b<0){
             printf("Connection Error \n");
@@ -209,15 +207,13 @@ void parse_grass(data_t * data) {
 }
 
 
-
-
 int main() {
     printf("Allocating Ressources...\n");
     prog_data = (data_t * ) malloc(sizeof(data_t));
     prog_data->main_portno = 0;
     prog_data->main_socket = 0;
     //prog_data->base_dir = string();
-    prog_data->users = vector<user_t *>();
+    prog_data->users = vector<user_t *>(0);
     prog_data->connections = vector<connection_t *>();
     printf("Parsing Configuration file... \n");
     parse_grass(prog_data);
