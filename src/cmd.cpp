@@ -102,7 +102,6 @@ int cmd_login(connection_t* curr_co){
 }
 
 int cmd_pass(connection_t * curr_co){
-    char response[MAX_OUTPUT_SIZE];
     if(strlen(curr_co->curr_args[0]) >= MAX_PASSWORD_SIZE) {
         return ERROR_PASSWORD_SIZE;
     }
