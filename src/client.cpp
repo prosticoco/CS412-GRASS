@@ -24,12 +24,12 @@ bool stop = false;
 
 void *client_reader(void* ptr){
     int n = 0;
-    int num_tokens = 0;
     client_t * client = (client_t*) ptr;
     char buffer[MAX_OUTPUT_SIZE];
     while(1){
         bzero(buffer,MAX_OUTPUT_SIZE);
         n = read(client->ftp_data.main_socket,buffer,MAX_OUTPUT_SIZE);
+        
         if (n < 0) {
             printf("ERROR reading from socket\n");
             pthread_kill(client->main,SIGTERM);
@@ -40,8 +40,10 @@ void *client_reader(void* ptr){
             pthread_kill(client->main,SIGTERM);
             break;
         }
+        
         printf("%s\n",buffer);
-        num_tokens = check_response(buffer,client);
+        check_response(buffer,client);
+        pthread_mutex_unlock(&(client->lock));       
     }
     return (void *) 0;
 }
@@ -51,19 +53,22 @@ void *client_writer(void* ptr){
     client_t * client = (client_t*) ptr;
     char buffer[MAX_INPUT_SIZE];
     int num_tokens = 0;
-    while(!ferror(stdin) && !feof(stdin)){  
-        bzero(buffer,MAX_INPUT_SIZE);
-        fgets(buffer,MAX_INPUT_SIZE -1,stdin);
+    while(!ferror(stdin) && !feof(stdin)){ 
+        bzero(buffer,MAX_INPUT_SIZE);      
+        fgets(buffer,MAX_INPUT_SIZE -1,stdin);       
         num_tokens = check_input(buffer,client);
         if(!num_tokens){
+            
             continue;
-        }
+        }   
+        pthread_mutex_lock(&(client->lock));
         n = write(client->ftp_data.main_socket,buffer,strlen(buffer));
         if (n < 0){
             cout <<"ERROR writing to socket" << endl;
             pthread_kill(client->main,SIGTERM);
             return (void *) 0;
-        }    
+        }
+            
     }
     pthread_kill(client->main,SIGTERM);
     return (void *) 0;

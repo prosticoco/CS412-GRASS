@@ -45,25 +45,15 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
         printf("Error popen on command : [%s] \n",cmd);
         return ERROR_IO;
     }
-    char * error= NULL;
     char tmp[MAX_OUTPUT_SIZE];
     bzero(tmp,MAX_OUTPUT_SIZE);
     size_t total = 0;
     total = fread(tmp,1,MAX_OUTPUT_SIZE-1,out);
-    // if(total == 0){
-    //     printf("Test : total is zero \n");
-    // }
-    if(total < 0){
-        printf("Error reading pipe \n");
-        pclose(out);
-        return ERROR_IO;
-    }
     output[total] = '\0';
     sprintf(output,tmp);
     if(output[strlen(output)-1] == '\n'){
         output[strlen(output)-1] = '\0';
     }
-    //int error = pclose(out)/256;
     pclose(out);
     return 0;
 }
