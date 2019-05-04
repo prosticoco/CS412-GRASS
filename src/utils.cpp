@@ -154,3 +154,24 @@ void error_handler(int err,connection_t* client){
             printf("ERROR : default error in command processing\n");
     }
 }
+
+void print_connection_fields(connection_t * c){
+    printf("main thread : [%lu] \n",c->tid);
+    printf("connection socket : %d \n",c->connection_socket);
+    printf("username : %s \n",c->username);
+    printf("autenticated : %d\n",c->auth);
+    printf("pwd : [%s]\n",c->pwd);
+    print_ftp_fields(&(c->ftp_data));
+}
+
+void print_ftp_fields(ftp_data_t * ftp){
+    printf("main socket : %d \n",ftp->main_socket);
+    printf("file transfer socket : %d \n",ftp->file_transfer_socket);
+    printf("ftp socket : %d \n",ftp->ftp_socket);
+    printf("ftp port : %d \n",ftp->ftp_port);
+    printf("filepath recv : [%s]\n",ftp->filepath_recv);
+    printf("filepath_send : [%s]\n",ftp->filepath_send);
+    printf("port is open : %d \n",ftp->port_open);
+    printf("sending : %d \n",ftp->sending);
+    printf("receiving : %d \n",ftp->receiving);
+}

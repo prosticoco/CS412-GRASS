@@ -23,7 +23,7 @@
 #define MAX_PASSWORD_SIZE 32
 #define MAX_THREAD_NUMS 16
 #define IP_ADDRESS_MAX_LENGTH 16
-#define MAX_TOKENS 5
+#define MAX_TOKENS 6
 #define MAX_TOKENS_PATH 15
 #define MAX_INPUT_SIZE 256
 #define MAX_OUTPUT_SIZE 512
@@ -36,10 +36,12 @@
 #define MAX_MARGIN 32
 #define ROOT_DIR_NAME "/root"
 #define ROOT "root"
-#define FTP_SEND 0
-#define FTP_RECV 1
 #define FTP_CLIENT 0
 #define FTP_SERVER 1
+#define CHUNK_SIZE 256
+#define MAX_CO_FTP 1
+#define SEND 0
+#define RECV 1
 
 struct connection_t;
 typedef struct connection_t connection_t;
@@ -47,6 +49,8 @@ struct ftp_data_t;
 typedef struct ftp_data_t ftp_data_t;
 struct client_t;
 typedef struct client_t client_t;
+struct ftp_thread_t;
+typedef struct ftp_thread_t ftp_thread_t;
 
 typedef struct {
     char* uname;
@@ -84,18 +88,29 @@ typedef struct{
 }data_t;
 
 struct ftp_data_t{
-    pthread_t ftp_id;
+    pthread_t send_id;
+    pthread_t recv_id;
     pthread_mutex_t clean_lock;
     int main_socket;
+    int file_transfer_socket;
     int ftp_socket;
     int ftp_port;
-    int ftp_type;
     int ftp_user;
-    char filepath[MAX_ROOT_PATH + MAX_PATH_SIZE];
+    char filepath_recv[MAX_ROOT_PATH + MAX_PATH_SIZE];
+    char filepath_send[MAX_ROOT_PATH + MAX_PATH_SIZE];
     char ip[IP_ADDRESS_MAX_LENGTH];
-    bool using_ftp;
-    FILE * ftp_file;
-    size_t file_size;
+    bool port_open;
+    bool sending;
+    bool receiving;
+    FILE * ftp_file_recv;
+    FILE * ftp_file_send;
+    size_t file_size_recv;
+    size_t file_size_send;
+};
+
+struct ftp_thread_t{
+    ftp_data_t* ftp;
+    int type;
 };
 
 struct connection_t{

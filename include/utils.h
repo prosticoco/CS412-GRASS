@@ -59,6 +59,10 @@ void findAndReplaceAll(std::string & data, std::string toSearch, std::string rep
 void error_handler(int err,connection_t* curr_co);
 
 
+void print_ftp_fields(ftp_data_t * ftp);
+void print_connection_fields(connection_t * c);
+
+
 
 
 #endif
