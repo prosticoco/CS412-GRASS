@@ -5,7 +5,7 @@ INCLUDES = include
 OBJS = $(BINDIR)/utils.o $(BINDIR)/cmd.o $(BINDIR)/ftp.o $(BINDIR)/exit.o 
 
 CC=g++
-CFLAGS=-Wall -Wextra -g -fno-stack-protector -fsanitize=undefined -pthread -z execstack  -std=gnu11 -I $(INCLUDES)/ -m32 
+CFLAGS=-Wall -Wextra -g -fno-stack-protector -pthread -z execstack  -std=gnu11 -I $(INCLUDES)/ -m32 
 DEPS = $(wildcard $(INCLUDES)/%.h)
 
 all: $(BINDIR)/utils.o $(BINDIR)/exit.o $(BINDIR)/ftp.o $(BINDIR)/cmd.o $(BINDIR)/client  $(BINDIR)/server $(DEPS)
