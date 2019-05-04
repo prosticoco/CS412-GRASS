@@ -66,4 +66,14 @@ void error_handler(int err,connection_t* curr_co);
  * */
 bool checkInvalidChars(char * in);
 
+/**
+ * Debugging functions
+ * 
+ * */
+void print_ftp_fields(ftp_data_t * ftp);
+void print_connection_fields(connection_t * c);
+
+
+
+
 #endif

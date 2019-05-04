@@ -24,12 +24,16 @@ void stop(int signum) {
     }
     connection_t * tmp;
     for(auto c : prog_data->connections){
-        pthread_kill(c->tid, SIGTERM);
+        print_connection_fields(c);
+        pthread_cancel(c->tid);
         pthread_join(c->tid,NULL);
         printf("Killed user : [%s] \n",c->username);
         tmp = c;
         printf("Killing any leftover ftp thread \n");
-        check_ftp(&(tmp->ftp_data));
+        check_ftp(&(tmp->ftp_data),SEND,true,false);
+        printf("killed send thread \n");
+        check_ftp(&(tmp->ftp_data),RECV,true,false);
+        printf("killed recv thread \n");
         free(tmp->username);
         close(tmp->connection_socket);
         free(tmp);
@@ -57,7 +61,8 @@ void stop(int signum) {
  */
 void thread_cleanup(connection_t* c){
     printf("Client : [%s] with tid : [%lu] Disconnection. \n",c->username,c->tid);
-    ftp_end(&(c->ftp_data),false);
+    check_ftp(&(c->ftp_data),SEND,true,false);
+    check_ftp(&(c->ftp_data),RECV,true,false);
     remove_connection(c->server_data,c);
     free(c->username);
     close(c->connection_socket);

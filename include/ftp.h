@@ -40,13 +40,24 @@ int file_send(int sock,int fd,size_t size);
 
 int file_recv(int sock,int fd, size_t size);
 
+int setup_ftp(connection_t * client);
 
-void stop_ftp_thread(ftp_data_t* ftp);
+void ftp_connect(ftp_data_t * ftp,int type);
 
-void *ftp_subthread(void* ptr);
+int connect_ftp_server(ftp_data_t* ftp);
+
+int connect_ftp_client(ftp_data_t * ftp);
+
+void init_ftp_fields(ftp_data_t* ftp);
+
+void ftp_clean(ftp_data_t* ftp,int type,bool stop_threads,bool exit);
+
+void *ftp_thread_send(void* ptr);
+
+void *ftp_thread_recv(void* ptr);
 
 void ftp_end(ftp_data_t * ftp,bool exit);
 
-void check_ftp(ftp_data_t * ftp);
+void check_ftp(ftp_data_t * ftp,int type,bool stop_threads,bool exit);
 
 void do_ftp(ftp_data_t* ftp,int sockfd,int fd);

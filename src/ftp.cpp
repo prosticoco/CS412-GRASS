@@ -14,10 +14,25 @@
 
 #include "ftp.h"
 #include "error.h"
+#include "utils.h"
 #include "grass.h"
 
-#define CHUNK_SIZE 256
-#define MAX_CO_FTP 1
+
+
+
+void init_ftp_fields(ftp_data_t* ftp){
+    bzero(ftp,sizeof(ftp_data_t));
+    ftp->port_open = false;
+    ftp->sending = false;
+    ftp->receiving = false;
+    ftp->ftp_file_recv = NULL;
+    ftp->ftp_file_send = NULL;
+    ftp->file_size_recv = 0;
+    ftp->file_size_send = 0;
+    ftp->ftp_socket = -1;
+    ftp->ftp_port = -1;
+    ftp->file_transfer_socket = -1;
+}
 
 int setup_ftp_connection_server(connection_t* client){
     int error = 0;
@@ -31,107 +46,188 @@ int setup_ftp_connection_server(connection_t* client){
     }
     client->ftp_data.ftp_port = portno;
     client->ftp_data.ftp_socket = sock;
-    client->ftp_data.using_ftp = true;
     return 0;
 }
 
-void check_ftp(ftp_data_t * ftp){
+void check_ftp(ftp_data_t * ftp,int type,bool stop_threads,bool exit){ 
     pthread_mutex_lock(&(ftp->clean_lock));
-    if(ftp->using_ftp == true){
-        printf("Thread is already used, killing and freeing \n");
-        stop_ftp_thread(ftp);
-    }
-    pthread_mutex_unlock(&(ftp->clean_lock));
-}
-
-
-void stop_ftp_thread(ftp_data_t* ftp){
-    pthread_kill(ftp->ftp_id,SIGTERM);
-    pthread_join(ftp->ftp_id,NULL);
-    if(ftp->ftp_file != NULL){
-        printf("closing file in stop_ftp_thread \n");
-        fclose(ftp->ftp_file);
-        ftp->ftp_file = NULL;
-    }
-    bzero(ftp->filepath,MAX_ROOT_PATH + MAX_PATH_SIZE);
-    if(ftp->ftp_socket > 1){
-        close(ftp->ftp_socket);
-    }  
-    ftp->using_ftp = false;
-    ftp->file_size = 0;
-    ftp->ftp_port = -1;
-}
-
-
-void ftp_end(ftp_data_t * ftp,bool exit){
-    pthread_mutex_lock(&(ftp->clean_lock));
-    if(ftp->ftp_file != NULL){
-        fclose(ftp->ftp_file);
-        ftp->ftp_file = NULL;
-    }
-    bzero(ftp->filepath,MAX_ROOT_PATH + MAX_PATH_SIZE);
-    if(ftp->ftp_socket > 1){
-        close(ftp->ftp_socket);
-    }
-    ftp->using_ftp = false;
-    ftp->file_size = 0;
-    ftp->ftp_port = -1;
-    pthread_mutex_unlock(&(ftp->clean_lock));
-    if(exit){
-        pthread_exit((void *)0);
-    }
-    return;
-}
-
-void *ftp_subthread(void* ptr){
-    int new_sockfd;
-    int error;
-    ftp_data_t * ftp = (ftp_data_t*) ptr;
-    if(ftp->ftp_type == FTP_RECV){
-        ftp->ftp_file = fopen(ftp->filepath,"wb");
-        if(ftp->ftp_file == NULL){
-            printf("Error Opening file, thread_exiting \n");
-            ftp_end(ftp,true);
+    if(type == SEND){
+        if(ftp->sending == true){
+            ftp_clean(ftp,type,stop_threads,exit);
         }
     }else{
-        ftp->ftp_file = fopen(ftp->filepath,"rb");
-        if(ftp->ftp_file == NULL){
-            printf("Error Opening file, thread_exiting \n");
-            ftp_end(ftp,true);
+        if(ftp->receiving == true){
+            ftp_clean(ftp,type,stop_threads,exit);
         }
     }
-    int fd = fileno(ftp->ftp_file);
-    if(fd < 0){
-        printf("Error getting the file descriptor \n");    
-        ftp_end(ftp,true);
+    pthread_mutex_unlock(&(ftp->clean_lock));
+}
+
+int setup_ftp(connection_t * client){
+    int error = 0;
+    pthread_mutex_lock(&(client->ftp_data.clean_lock));
+    if(!(client->ftp_data.port_open)){
+        error = setup_ftp_connection_server(client);
+        if(error){
+            pthread_mutex_unlock(&(client->ftp_data.clean_lock));
+            return error;
+        }
     }
-    if(ftp->ftp_user == FTP_SERVER){
+    pthread_mutex_unlock(&(client->ftp_data.clean_lock));
+    return error;
+}
+
+
+void ftp_clean(ftp_data_t* ftp,int type,bool stop_threads,bool exit){
+    if(type == SEND){
+        if(stop_threads){
+            pthread_cancel(ftp->send_id);
+            pthread_join(ftp->send_id,NULL);
+        }        
+        if(ftp->ftp_file_send != NULL){
+            printf("Closing file used for put\n");
+            fclose(ftp->ftp_file_send);
+            ftp->ftp_file_send = NULL;
+        }
+        bzero(ftp->filepath_send,MAX_ROOT_PATH + MAX_PATH_SIZE);
+        ftp->sending = false;
+        ftp->file_size_send = 0;
+    }else{
+        if(stop_threads){
+            pthread_cancel(ftp->recv_id);
+            pthread_join(ftp->recv_id,NULL);
+        }
+        if(ftp->ftp_file_recv != NULL){
+            printf("Closing file used for put\n");
+            fclose(ftp->ftp_file_recv);
+            ftp->ftp_file_recv = NULL;
+        }
+        bzero(ftp->filepath_recv,MAX_ROOT_PATH + MAX_PATH_SIZE);
+        ftp->receiving = false;
+        ftp->file_size_recv = 0;
+    }
+    if((ftp->receiving == false) && (ftp->sending == false)){
+        if(ftp->ftp_socket > 1){
+            close(ftp->ftp_socket);        
+        }
+        ftp->ftp_port = -1;
+        if(ftp->file_transfer_socket > 1){
+            close(ftp->file_transfer_socket);
+        }
+        ftp->file_transfer_socket = -1;
+        ftp->port_open = false; 
+    }
+    if(exit){
+        pthread_mutex_unlock(&(ftp->clean_lock));
+        pthread_exit((void *) 0);
+    }
+}
+
+int connect_ftp_server(ftp_data_t* ftp){
+    int sock = 0;
+    int ret = 0;
+    pthread_mutex_lock(&(ftp->clean_lock));
+    if(!ftp->port_open){
         struct sockaddr_in cli_addr;
         socklen_t clilen;
         clilen = sizeof(cli_addr); 
-        new_sockfd = accept(ftp->ftp_socket,(struct sockaddr *) &cli_addr,&clilen);
-        if(new_sockfd < 0){
-            printf("Error : FTP thread, accept() failed \n");
-            ftp_end(ftp,true);
+        sock = accept(ftp->ftp_socket,(struct sockaddr *) &cli_addr,&clilen);
+        if(sock < 0){
+            printf("Error on accept() \n");
+            ret = ERROR_NETWORK;
+        }else{
+            ftp->file_transfer_socket = sock;
+            ftp->port_open = true;
         }
-        do_ftp(ftp,new_sockfd,fd);
-    }else{
-        error = setup_client_co(ftp->ip,ftp->ftp_port,&new_sockfd);
-        if(error){
-            printf("Error setting connection to server \n");
-            ftp_end(ftp,true);
-        }
-        do_ftp(ftp,new_sockfd,fd);
     }
-    return (void *) 0;
+    pthread_mutex_unlock(&(ftp->clean_lock));
+    return ret;
 }
 
-void do_ftp(ftp_data_t* ftp,int sockfd,int fd){
-    if(ftp->ftp_type == FTP_RECV){
-        int error = file_recv(sockfd,fd,ftp->file_size);
+int connect_ftp_client(ftp_data_t * ftp){
+    int ret = 0;
+    pthread_mutex_lock(&(ftp->clean_lock));
+    if(!ftp->port_open){
+        ret = setup_client_co(ftp->ip,ftp->ftp_port,&(ftp->file_transfer_socket));
+        if(!ret){
+            ftp->port_open = true;
+        }
+    }
+    pthread_mutex_unlock(&(ftp->clean_lock));
+    return ret;
+}
+
+
+void *ftp_thread_recv(void* ptr){
+    int error = 0;
+    int fd;
+    ftp_data_t * ftp = (ftp_data_t *) ptr;
+    int type = RECV; 
+    printf("path : [%s]\n",ftp->filepath_recv); 
+    ftp->ftp_file_recv = fopen(ftp->filepath_recv,"wb");
+    if(ftp->ftp_file_recv == NULL){
+        printf("Error opening file, thread exiting \n");
+        check_ftp(ftp,type,false,true);
+    }
+    fd = fileno(ftp->ftp_file_recv);
+    if(fd < 0){
+        printf("Error getting the file descriptor \n");    
+        check_ftp(ftp,type,false,true);
+    }    
+    ftp_connect(ftp,type);
+    do_ftp(ftp,fd,type);
+    check_ftp(ftp,type,false,true);
+} 
+
+
+void *ftp_thread_send(void* ptr){
+    int error = 0;
+    int fd;
+    ftp_data_t * ftp = (ftp_data_t *) ptr;
+    int type = SEND; 
+    printf("path : [%s]\n",ftp->filepath_send);
+    ftp->ftp_file_send = fopen(ftp->filepath_send,"rb");
+    if(ftp->ftp_file_send == NULL){
+        printf("Error opening file, thread exiting \n");
+        check_ftp(ftp,type,false,true);
+    }
+    fd = fileno(ftp->ftp_file_send);
+    if(fd < 0){
+        printf("Error getting the file descriptor \n");    
+        check_ftp(ftp,type,false,true);
+    }
+    ftp_connect(ftp,type); 
+    do_ftp(ftp,fd,type);
+    check_ftp(ftp,type,false,true);
+}
+
+void ftp_connect(ftp_data_t * ftp,int type){
+    int error = 0;
+    if(ftp->ftp_user == FTP_SERVER){
+        error = connect_ftp_server(ftp);
+        if(error < 0){
+            printf("Error setting up ftp connection from server\n");
+            check_ftp(ftp,type,false,true);
+        }
+    }else{
+        error = connect_ftp_client(ftp);
+        if(error){
+            printf("Error setting up ftp connection from client \n");
+            check_ftp(ftp,type,false,true);
+        }
+    }
+}
+
+
+
+void do_ftp(ftp_data_t* ftp,int fd,int type){
+    printf("socket is : %d \n",ftp->file_transfer_socket);
+    if(type == RECV){
+        int error = file_recv(ftp->file_transfer_socket,fd,ftp->file_size_recv);
         if(error == ERROR_FILESIZE){
         char err_msg[] = "Error:  file transfer failed.";
-        printf("error filesize \n");
+        printf("error filesize for file : [%s] \n",ftp->filepath_recv);
+        printf("Expected file size : %zu \n",ftp->file_size_recv);
         write(ftp->main_socket,err_msg,strlen(err_msg)); 
         }
         if(error == ERROR_NETWORK){
@@ -141,15 +237,14 @@ void do_ftp(ftp_data_t* ftp,int sockfd,int fd){
             printf("received %d bytes of data \n",error);
         }     
     }else{
-        int error = file_send(sockfd,fd,ftp->file_size);
-        if(((size_t)error) != ftp->file_size){
+        int error = file_send(ftp->file_transfer_socket,fd,ftp->file_size_send);
+        if(((size_t)error) != ftp->file_size_send){
             printf("Error file send failed or did not send required amount \n");
         }
         if(error >= 0){
             printf("sent %d bytes of data \n",error);
         }       
     }
-    ftp_end(ftp,true);
 }
 
 int setup_server_co(int * portno,int * sock,bool random_port,unsigned int max_co){
@@ -228,7 +323,6 @@ int file_send(int sock,int fd,size_t size){
         remaining -= sent;
         total_sent += sent;
     }
-    close(sock);
     if(sent < 0){
         printf("Error : sendfile() \n");
         return ERROR_SEND;
@@ -247,7 +341,7 @@ int file_recv(int sock,int fd, size_t size){
         remaining -= rec;
         total_recv += rec;
         if(total_recv > size){
-            printf("Error : file receive is too large \n");
+            printf("Error : file receive is too large expected size : %zu,size received : %zu \n",size,total_recv);
             return ERROR_FILESIZE;
         }
         error = write(fd,buffer,rec);
@@ -259,7 +353,6 @@ int file_recv(int sock,int fd, size_t size){
             break;
         }         
     }
-    close(sock);
     if(total_recv != size){
         printf("error file size \n");
         return ERROR_FILESIZE;

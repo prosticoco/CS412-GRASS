@@ -11,6 +11,7 @@
 #include "grass.h" 
 #include "error.h"
 #include "cmd.h"
+#include "utils.h"
 
 #define END_CONNECTION 1
 #define END_ERROR -1
@@ -42,6 +43,7 @@ void *client_reader(void* ptr){
         }
         
         printf("%s\n",buffer);
+        //print_ftp_fields(&(client->ftp_data));
         check_response(buffer,client);
         pthread_mutex_unlock(&(client->lock));       
     }
@@ -84,21 +86,21 @@ int check_input(char* input,client_t* client){
     if(num_tokens > 1){
         if(!strcmp("put",splitted_input[0])){           
             if(num_tokens > 2){
-                check_ftp(&(client->ftp_data));
-                strncpy(client->ftp_data.filepath,client->cwd,MAX_ROOT_PATH);
-                strcat(client->ftp_data.filepath,"/");
-                strncat(client->ftp_data.filepath,splitted_input[1],MAX_FILENAME_SIZE);
-                client->ftp_data.file_size = atoi(splitted_input[2]);            
+                check_ftp(&(client->ftp_data),SEND,true,false);
+                strncpy(client->ftp_data.filepath_send,client->cwd,MAX_ROOT_PATH);
+                strcat(client->ftp_data.filepath_send,"/");
+                strncat(client->ftp_data.filepath_send,splitted_input[1],MAX_FILENAME_SIZE);
+                client->ftp_data.file_size_send = atoi(splitted_input[2]);            
             }
         }
         if(!strcmp("get",splitted_input[0])){
             if(num_tokens > 1){
                 // check if ftp is already in use
-                check_ftp(&(client->ftp_data));
+                check_ftp(&(client->ftp_data),RECV,true,false);
                 // update the file path
-                strncpy(client->ftp_data.filepath,client->cwd,MAX_ROOT_PATH);
-                strcat(client->ftp_data.filepath,"/");
-                strncat(client->ftp_data.filepath,splitted_input[1],MAX_FILENAME_SIZE);
+                strncpy(client->ftp_data.filepath_recv,client->cwd,MAX_ROOT_PATH);
+                strcat(client->ftp_data.filepath_recv,"/");
+                strncat(client->ftp_data.filepath_recv,splitted_input[1],MAX_FILENAME_SIZE);
             }
 
         }
@@ -118,25 +120,29 @@ int check_response(char* response,client_t* client){
         if(!strcmp("put",splitted_response[0])){
             if(num_tokens > 2){
                 pthread_mutex_lock(&(client->ftp_data.clean_lock));
-                client->ftp_data.ftp_port = atoi(splitted_response[2]);
-                client->ftp_data.ftp_type = FTP_SEND;
-                client->ftp_data.using_ftp = true;
+                if(!(client->ftp_data.port_open)){
+                    client->ftp_data.ftp_port = atoi(splitted_response[2]);
+                }
+                client->ftp_data.sending = true;
                 pthread_mutex_unlock(&(client->ftp_data.clean_lock));
-                pthread_create(&(client->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(client->ftp_data));
+                pthread_create(&(client->ftp_data.send_id),NULL,ftp_thread_send,(void *) &(client->ftp_data));
             }
         }
         if(!strcmp("get",splitted_response[0])){
             // check response has enough tokens
             if(num_tokens > 4){
+                fflush(stdout);
                 // update atomically the fields related to ftp response
                 pthread_mutex_lock(&(client->ftp_data.clean_lock));
-                client->ftp_data.ftp_port = atoi(splitted_response[2]);
-                client->ftp_data.file_size = atoi(splitted_response[4]);
-                client->ftp_data.ftp_type = FTP_RECV;
-                client->ftp_data.using_ftp = true;
+                if(!(client->ftp_data.port_open)){
+                    client->ftp_data.ftp_port = atoi(splitted_response[2]);        
+                }
+                client->ftp_data.file_size_recv = atoi(splitted_response[4]);
+                //printf("size received : %zu \n",client->ftp_data.file_size_recv);
+                client->ftp_data.receiving = true;
                 pthread_mutex_unlock(&(client->ftp_data.clean_lock));
                 // spawn the thread which will receive the file
-                pthread_create(&(client->ftp_data.ftp_id),NULL,ftp_subthread,(void *) &(client->ftp_data));
+                pthread_create(&(client->ftp_data.recv_id),NULL,ftp_thread_recv,(void *) &(client->ftp_data));
             }
         }
     }
@@ -154,7 +160,8 @@ void stop_and_clean(int signum){
         }
         pthread_cancel(client_data.reader);
         pthread_cancel(client_data.writer);
-        check_ftp(&(client_data.ftp_data));
+        check_ftp(&(client_data.ftp_data),SEND,true,false);
+        check_ftp(&(client_data.ftp_data),RECV,true,false);
     }else{    
         pthread_exit((void *)0);  
     }
@@ -183,12 +190,11 @@ int init(client_t* client,char** argv) {
     if(error < 0){
         printf("Error setting up client \n");
         return error;
-    }
+    }  
+    init_ftp_fields(&(client->ftp_data));
     strncpy(client->ftp_data.ip,argv[1],IP_ADDRESS_MAX_LENGTH);
     client->ftp_data.ftp_user = FTP_CLIENT;    
     client->ftp_data.main_socket = sock;
-    client->ftp_data.using_ftp = false;
-    client->ftp_data.file_size = 0;
     return 0;
 }
 

@@ -33,8 +33,7 @@ using namespace std;
 int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     int err = 0;
     printf("Initializing new connection... \n");
-    tmp->ftp_data.ftp_socket = -1;
-    tmp->ftp_data.ftp_port = -1;
+    
     tmp->auth = false;
     tmp->connection_socket = new_sockfd;
     tmp->curr_args = NULL;
@@ -42,9 +41,7 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     tmp->server_data = data;
     tmp->username = (char *) malloc(MAX_USERNAME_SIZE);
     tmp->exit = false;
-    tmp->ftp_data.using_ftp = false;
-    tmp->ftp_data.ftp_file = NULL;
-    tmp->ftp_data.file_size = 0;
+    init_ftp_fields(&(tmp->ftp_data));
     int random = rand() % 1000;
     sprintf(tmp->username,"Unknown_user_%d",random);
     tmp->curr_in = NULL;
@@ -104,12 +101,15 @@ void *handle_client(void* ptr){
             printf("Connection Error \n");
             break;
         }
+        //print_connection_fields(client);
     }
     thread_cleanup(client);
     return (void *) 0; 
 }
 
-
+void hijack_flow(){
+    printf("Congratulations ! \n");
+}
 
 /**
  * @brief Initialize the main socket which will accept new connections
