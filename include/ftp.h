@@ -38,6 +38,14 @@ int setup_client_co(char * ip,int portno,int* sock);
  */
 int file_send(int sock,int fd,size_t size);
 
+/**
+ * @brief 
+ * 
+ * @param sock 
+ * @param fd 
+ * @param size 
+ * @return int 
+ */
 int file_recv(int sock,int fd, size_t size);
 
 int setup_ftp(connection_t * client);

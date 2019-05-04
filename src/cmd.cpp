@@ -115,11 +115,14 @@ int cmd_pass(connection_t * curr_co){
         return 0;
     }    
     bool found = false;
+    char username[MAX_USERNAME_SIZE];
+    bzero(username,MAX_USERNAME_SIZE);
+    strncpy(username,curr_co->tmp_username,MAX_USERNAME_SIZE);
     for(auto& user : curr_co->server_data->users) {
-        if( strncmp(user->uname, curr_co->tmp_username, strlen(user->uname)) == 0) {
+        if( strncmp(user->uname, username, strlen(user->uname)) == 0) {
             if(strncmp(curr_co->curr_args[0], user->pass,  strlen(user->pass))== 0) {
                 curr_co->auth = true;
-                strncpy(curr_co->username, curr_co->tmp_username, MAX_USERNAME_SIZE);
+                strncpy(curr_co->username, username, MAX_USERNAME_SIZE);
                 strncpy(curr_co->curr_out,"Authentication successful", MAX_ARG_SIZE);
                 found = true;
                 break;
@@ -129,7 +132,7 @@ int cmd_pass(connection_t * curr_co){
     }
     if(!found) {
         printf("Login failed\n");
-        sprintf(curr_co->curr_out,curr_co->tmp_username);
+        sprintf(curr_co->curr_out,username);
         strcat(curr_co->curr_out," : Invalid Credentials");  
     }
     printf("[%s] : login\n", curr_co->username);
