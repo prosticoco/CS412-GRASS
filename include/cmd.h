@@ -142,7 +142,23 @@ int cmd_rm(connection_t* curr_co);
  */
 int cmd_grep(connection_t* curr_co);
 
+/**
+ * @brief function which performs the get command, this function allows any client to get another file while uploading
+ * a file simulatenously, however a client cannot perform two simultaneous get commands, if so the function will stop
+ * the current thread performing get and spawn a new thread for the new request
+ * 
+ * @param curr_co pointer to the metadata of the connection 
+ * @return int returns 0 upon success, negative value if an error occured
+ */
 int cmd_get(connection_t* curr_co);
+
+/**
+ * @brief function which performs the put command, a client can issue a put command while downloading a file,
+ * however a client cannot perform two simulateneous put commands, if so the function will stop the 
+ * current thread performing put and spawn a new one
+ * @param curr_co pointer to the metadata of the connection 
+ * @return int returns 0 upon success, negative value if an error occured
+ */
 int cmd_put(connection_t* curr_co);
 /**
  * @brief Custom compartor function that compares 2 strings alphabetically and is case-insensitive
