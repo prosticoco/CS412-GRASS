@@ -468,25 +468,16 @@ int cmd_get(connection_t* curr_co){
 int cmd_grep(connection_t* curr_co) {
     printf("[%s] : grep ", curr_co->username);
     char pattern[MAX_PATTERN_SIZE];
-    char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
-    bzero(pattern, MAX_PATTERN_SIZE);
+    //bzero(pattern, MAX_PATTERN_SIZE);
+    strcpy(pattern, curr_co->curr_args[0]);
 
-    if(strlen(curr_co->curr_args[0]) >= MAX_ARG_SIZE ) {
-        printf("- FAIL\n");
-        return ERROR_ARGUMENT_SIZE;
-    }
-        
     //check for potential command injection
     size_t dict_size = DICT_SIZE;
-    if(!checkInvalidChars(curr_co->curr_args[0], dict_size)) {
+    if(!checkInvalidChars(pattern, dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
-
-    strncpy(pattern, curr_co->curr_args[0], MAX_ARG_SIZE);
-
-    printf("%s\n", pattern);
-    
+    char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
     bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
     sprintf(cmd, "grep %s %s -rl",pattern , curr_co->pwd);
     char out[4*MAX_OUTPUT_SIZE];
