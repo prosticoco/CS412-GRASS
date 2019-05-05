@@ -173,8 +173,8 @@ int cmd_ping(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    size_t dict_size = curr_co->server_data->dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, dict_size)) {
+    size_t dict_size = DICT_SIZE;
+    if(!checkInvalidChars(curr_co->curr_args[0], dict_size )) {
         return ERROR_INVALID_CHARS;
     }    
 
@@ -254,8 +254,8 @@ int cmd_mkdir(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    size_t dict_size = curr_co->server_data->dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, dict_size)) {
+    size_t dict_size = DICT_SIZE;
+    if(!checkInvalidChars(curr_co->curr_args[0], dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -300,8 +300,8 @@ int cmd_cd(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    size_t dict_size = curr_co->server_data->dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, --dict_size)) {
+    size_t dict_size = DICT_SIZE;
+    if(!checkInvalidChars(curr_co->curr_args[0], --dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -367,8 +367,8 @@ int cmd_rm(connection_t* curr_co) {
         return ERROR_PATH_NOT_SUPPORTED;
     } 
     //check for potential command injection
-    size_t dict_size = curr_co->server_data->dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0],curr_co->server_data->dict, dict_size)) {
+    size_t dict_size = DICT_SIZE;
+    if(!checkInvalidChars(curr_co->curr_args[0], dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -476,8 +476,8 @@ int cmd_grep(connection_t* curr_co) {
     }
         
     //check for potential command injection
-    size_t dict_size = curr_co->server_data->dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, dict_size)) {
+    size_t dict_size = DICT_SIZE;
+    if(!checkInvalidChars(curr_co->curr_args[0], dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -542,7 +542,6 @@ int tokenize_path(char* path, char (*out)[MAX_FOLDER_NAME_SIZE]) {
     printf("Tokenize succeed \n");
     return token_num;
 }
-
 
 int check_file_validity(char* path,connection_t* client){   
     char file_path[MAX_PATH_SIZE];

@@ -64,6 +64,7 @@
 #define FTP_SERVER 1
 #define CHUNK_SIZE 256
 #define MAX_CO_FTP 1
+#define DICT_SIZE 8
 #define SEND 0
 #define RECV 1
 
@@ -143,7 +144,6 @@ typedef struct{
     std::vector<connection_t *> connections;
     pthread_mutex_t vector_protect;
     char root_path[MAX_PATH_SIZE];
-    std::string dict;
 }data_t;
 
 /**
