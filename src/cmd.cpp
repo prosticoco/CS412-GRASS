@@ -94,22 +94,18 @@ int process_cmd(connection_t * curr_co){
 
 
 int cmd_login(connection_t* curr_co){
-    print_connection_fields(curr_co);
     printf("Login attempt\n");
+    curr_co->ready_for_check = true;
+    strncpy(curr_co->tmp_username,curr_co->curr_args[0],MAX_USERNAME_SIZE + 1);
     if(strlen(curr_co->curr_args[0]) > MAX_USERNAME_SIZE) {
         return ERROR_USERNAME_SIZE;
     }
-    curr_co->ready_for_check = true;
-    strncpy(curr_co->tmp_username,curr_co->curr_args[0],MAX_USERNAME_SIZE);
     strcpy(curr_co->curr_out,"Please provide your password");
     return 0;
 }
 
 int cmd_pass(connection_t * curr_co){
-    printf("%d\n", sizeof(bool));
-    print_connection_fields(curr_co);
-    printf("size of username : %d\n", strlen(curr_co->tmp_username));
-    if(strlen(curr_co->curr_args[0]) >= MAX_PASSWORD_SIZE) {
+    if(strlen(curr_co->curr_args[0]) > MAX_PASSWORD_SIZE) {
         return ERROR_PASSWORD_SIZE;
     }
 
@@ -238,11 +234,11 @@ int cmd_ls(connection_t* curr_co) {
     bzero(cmd, MAX_PATH_SIZE + MAX_ROOT_PATH + 20);
     strcpy(cmd, "ls -l ");
     strncat(cmd, curr_co->pwd, MAX_PATH_SIZE + MAX_ROOT_PATH);
-    char out[MAX_INPUT_SIZE];
-    bzero(out, MAX_INPUT_SIZE);
+    char out[MAX_OUTPUT_SIZE];
+    bzero(out, MAX_OUTPUT_SIZE);
     
     int err = execute_system_cmd(cmd, out);
-    strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
+    strncpy(curr_co->curr_out, out, MAX_OUTPUT_SIZE);
     return err;
 }
 
@@ -278,6 +274,7 @@ int cmd_mkdir(connection_t* curr_co) {
         return ERROR_MAX_PATH_SIZE;
     }
 
+    printf("%s\n ", curr_co->curr_args[0]);
     char dir_path[MAX_PATH_SIZE + MAX_ROOT_PATH];
     bzero(dir_path, MAX_PATH_SIZE + MAX_ROOT_PATH);
     strncat(dir_path, curr_co->pwd, MAX_PATH_SIZE + MAX_ROOT_PATH);    
@@ -313,10 +310,10 @@ int cmd_cd(connection_t* curr_co) {
 
     printf("%s\n", curr_co->curr_args[0]);
 
-    char cd[MAX_PATH_SIZE + MAX_ROOT_PATH + 15];
-    bzero(cd, MAX_PATH_SIZE + MAX_ROOT_PATH + 15);
     char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH];
     bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH);
+    char cd[MAX_PATH_SIZE + MAX_ROOT_PATH + 15];
+    bzero(cd, MAX_PATH_SIZE + MAX_ROOT_PATH + 15);
     char out[MAX_OUTPUT_SIZE];
     bzero(out, MAX_OUTPUT_SIZE);
     
@@ -470,6 +467,7 @@ int cmd_grep(connection_t* curr_co) {
         printf("- FAIL\n");
         return ERROR_ARGUMENT_SIZE;
     }
+        
     //check for potential command injection
     size_t dict_size = dict.size();
     if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
