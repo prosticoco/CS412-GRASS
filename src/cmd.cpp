@@ -1,3 +1,4 @@
+
 #include "cmd.h"
 #include "error.h"
 #include "utils.h"
@@ -6,6 +7,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <pthread.h>
+#include <algorithm>
 #define NUM_COMMANDS 15
 
 command_t cmds[NUM_COMMANDS] = {
@@ -141,17 +143,33 @@ int cmd_pass(connection_t * curr_co){
     return 0;
 }
 
+
+bool iequals(const std::string& a, const std::string& b) {
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
+}
+
 int cmd_w(connection_t* curr_co) {
     printf("[%s] : w\n", curr_co->username);
     // there is always at least one user authentified
+    std::vector<std::string> usernames(0);
     for (auto co : curr_co->server_data->connections) {
         if (co->auth) {
-            strncat(curr_co->curr_out, co->username, MAX_USERNAME_SIZE);
-            strcat(curr_co->curr_out, " ");
+            usernames.push_back(co->username);
         }
+    }
+    
+    sort(usernames.begin(), usernames.end(), iequals);
+    for(auto user : usernames) {
+        strncat(curr_co->curr_out, user.c_str(), MAX_USERNAME_SIZE);
+        strcat(curr_co->curr_out, " ");
     }
     return 0;
 }
+
 
 int cmd_ping(connection_t* curr_co) {
     if(curr_co->auth) {
