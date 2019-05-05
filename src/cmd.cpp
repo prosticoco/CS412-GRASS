@@ -94,7 +94,6 @@ int process_cmd(connection_t * curr_co){
 
 
 int cmd_login(connection_t* curr_co){
-    print_connection_fields(curr_co);
     printf("Login attempt\n");
     if(strlen(curr_co->curr_args[0]) > MAX_USERNAME_SIZE) {
         return ERROR_USERNAME_SIZE;
@@ -106,9 +105,6 @@ int cmd_login(connection_t* curr_co){
 }
 
 int cmd_pass(connection_t * curr_co){
-    printf("%d\n", sizeof(bool));
-    print_connection_fields(curr_co);
-    printf("size of username : %d\n", strlen(curr_co->tmp_username));
     if(strlen(curr_co->curr_args[0]) >= MAX_PASSWORD_SIZE) {
         return ERROR_PASSWORD_SIZE;
     }
@@ -437,14 +433,20 @@ int cmd_put(connection_t* curr_co){
 int cmd_get(connection_t* curr_co){
     printf("[%s] : get ", curr_co->username);
     int error = 0;
+    if(strlen(curr_co->curr_args[0]) > MAX_FILENAME_SIZE){
+        return ERROR_FILESIZE;
+    }
     check_ftp(&(curr_co->ftp_data),SEND,true,false);
     char * path = curr_co->ftp_data.filepath_send;
     bzero(path,MAX_PATH_SIZE + MAX_ROOT_PATH);
     strcpy(path,"root");
     strcat(path,curr_co->relative_pwd);
     strcat(path,"/");
-    strcat(path,curr_co->curr_args[0]);
-    check_file_validity(path,curr_co);
+    strncat(path,curr_co->curr_args[0],MAX_FILENAME_SIZE);
+    error = check_file_validity(path,curr_co);
+    if(error){
+        return error;
+    }
     // setup connection for ftp
     error = setup_ftp(curr_co);
     if(error){
