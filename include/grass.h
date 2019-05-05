@@ -143,6 +143,7 @@ typedef struct{
     std::vector<connection_t *> connections;
     pthread_mutex_t vector_protect;
     char root_path[MAX_PATH_SIZE];
+    std::string dict;
 }data_t;
 
 /**
