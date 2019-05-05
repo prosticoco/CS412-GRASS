@@ -319,6 +319,7 @@ int cmd_cd(connection_t* curr_co) {
     
     if(strncmp(curr_co->curr_args[0], "/", 1 )!=0) {
         sprintf(new_path, "%s/%s", curr_co->pwd, curr_co->curr_args[0]);
+        printf("size of new_path : %d\n", strlen(new_path));
     } else {
         sprintf(new_path, "%s/%s", curr_co->root, curr_co->curr_args[0]);
     }
@@ -481,10 +482,14 @@ int cmd_grep(connection_t* curr_co) {
         return ERROR_INVALID_CHARS;
     }
 
-    printf("%s\n", curr_co->curr_args[0]);
+    char pattern[MAX_PATTERN_SIZE];
+    bzero(pattern, MAX_PATTERN_SIZE);
+    strncpy(pattern, curr_co->curr_args[0], MAX_ARG_SIZE);
+
+    printf("%s\n", pattern);
     char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
     bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
-    sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
+    sprintf(cmd, "grep %s %s -rl",pattern , curr_co->pwd);
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);
     int err = execute_system_cmd(cmd,out);

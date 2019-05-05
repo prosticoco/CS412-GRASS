@@ -49,6 +49,7 @@
 #define MAX_TOKENS_PATH 15
 #define MAX_INPUT_SIZE 256
 #define MAX_OUTPUT_SIZE 512
+#define MAX_PATTERN_SIZE 64
 #define MAX_LINE_SIZE 128
 #define MAX_PATH_SIZE 128
 #define MAX_ROOT_PATH 256
@@ -56,6 +57,7 @@
 #define MAX_FILENAME_SIZE 32
 #define MAX_FOLDER_NAME_SIZE 32
 #define MAX_MARGIN 32
+#define MAX_LENGTH 16
 #define ROOT_DIR_NAME "/root"
 #define ROOT "root"
 #define FTP_CLIENT 0
