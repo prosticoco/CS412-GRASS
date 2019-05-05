@@ -479,7 +479,7 @@ int cmd_grep(connection_t* curr_co) {
 
     printf("%s\n", curr_co->curr_args[0]);
     char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
-    bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZEsize_t dict_size = dict.size(); + MAX_MARGIN);
+    bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
     sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);
