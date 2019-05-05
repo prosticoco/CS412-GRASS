@@ -260,22 +260,26 @@ int cmd_mkdir(connection_t* curr_co) {
         return ERROR_INVALID_CHARS;
     }
 
+    //check if folder name is valid
     if(strlen(curr_co->curr_args[0]) >= MAX_FOLDER_NAME_SIZE) {
         printf("- FAIL\n");
         return ERROR_FOLDER_NAME_SIZE;
     }
-    printf("%s\n", curr_co->curr_args[0]);
+    
+    //check that relative path from root directory is less than 128
+    if((strlen(curr_co->pwd) + strlen(curr_co->curr_args[0]) - strlen(curr_co->root)) >= MAX_PATH_SIZE ) {
+        printf("- FAIL\n");
+        return ERROR_MAX_PATH_SIZE;
+    }
 
-    char cmd[MAX_INPUT_SIZE] = "mkdir ";
-    char dir_path[MAX_PATH_SIZE];
-    bzero(dir_path, MAX_PATH_SIZE);
-    strncat(dir_path, curr_co->pwd, MAX_PATH_SIZE);    
+    char dir_path[MAX_PATH_SIZE + MAX_ROOT_PATH];
+    bzero(dir_path, MAX_PATH_SIZE + MAX_ROOT_PATH);
+    strncat(dir_path, curr_co->pwd, MAX_PATH_SIZE + MAX_ROOT_PATH);    
     strcat(dir_path, "/" );
-    strncat(dir_path, curr_co->curr_args[0], MAX_PATH_SIZE);
-    strcat(cmd, dir_path);
+    strncat(dir_path, curr_co->curr_args[0], MAX_FOLDER_NAME_SIZE);
 
-    char out[MAX_INPUT_SIZE];
-    bzero(out,MAX_INPUT_SIZE);
+    char out[MAX_OUTPUT_SIZE];
+    bzero(out,MAX_OUTPUT_SIZE);
     int err = mkdir(dir_path, ACCESSPERMS);
     if (err) {
         //fail
@@ -303,8 +307,8 @@ int cmd_cd(connection_t* curr_co) {
 
     printf("%s\n", curr_co->curr_args[0]);
 
-    char cd[MAX_PATH_SIZE];
-    bzero(cd, MAX_PATH_SIZE);
+    char cd[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE + 15];
+    bzero(cd, MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE + 15);
     char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE];
     bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE);
     char out[MAX_OUTPUT_SIZE];

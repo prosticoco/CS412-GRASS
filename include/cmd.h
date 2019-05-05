@@ -3,7 +3,6 @@
 
 #include "grass.h"
 
-
 /**
  * @brief Main client-input handler, for every line sent by the client which is read from the
  * socket, the corresponding thread calls this functions which handles the command in the following way :

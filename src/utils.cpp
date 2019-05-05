@@ -167,6 +167,10 @@ void error_handler(int err,connection_t* client){
             printf("ERROR : command does not support paths\n");
             strcpy(client->curr_out,"ERROR : command does not support paths");
             break;
+        case ERROR_MAX_PATH_SIZE:
+            printf("ERROR : command does not support paths longer than 128\n");
+            strcpy(client->curr_out,"ERROR : command does not support paths longer than 128");
+            break;
         default :
             printf("ERROR : default error in command processing\n");
     }
