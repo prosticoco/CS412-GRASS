@@ -76,6 +76,9 @@ void print_ftp_fields(ftp_data_t * ftp);
 void print_connection_fields(connection_t * c);
 
 
+int check_file_validity(char* path,connection_t * c);
+
+
 
 
 #endif
