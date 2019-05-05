@@ -133,11 +133,7 @@ int init_server(data_t * data){
     return 0;  
 }
 
-/**
- * @brief Listens to the main socket for new TCP connections and then calls connection handler
- * 
- * @param data pointer the program's data
- */
+
 void accept_connections(data_t* data){   
     int err = 0;
     signal(SIGTERM, stop);
@@ -216,7 +212,6 @@ int main() {
     prog_data = (data_t * ) malloc(sizeof(data_t));
     prog_data->main_portno = 0;
     prog_data->main_socket = 0;
-    //prog_data->base_dir = string();
     prog_data->users = vector<user_t *>(0);
     prog_data->connections = vector<connection_t *>();
     printf("Parsing Configuration file... \n");

@@ -247,6 +247,9 @@ extern data_t* prog_data;
  */
 void hijack_flow();
 
+
+// SERVER RELATED FUNCTIONS
+
 /**
  * @brief function which maintains command communication between server and one client
  * 
@@ -265,6 +268,22 @@ void *handle_client(void* curr_co);
  * @return int 0 on success negative error code otherwise
  */
 int init_connection(int socket,connection_t* co,data_t* data);
+
+
+/**
+ * @brief Listens to the main socket for new TCP connections and then calls connection handler
+ * 
+ * @param data pointer the program's data
+ */
+void accept_connections(data_t* data);
+
+
+/**
+ * @brief parses the grass.conf file and updates the fields in the server's metadata
+ * 
+ * @param data 
+ */
+void parse_grass(data_t * data);
 
 
 // CLIENT CODE FUNCTION PROTOTYPES

@@ -1,6 +1,17 @@
 #ifndef CMD_H
 #define CMD_H
 
+/**
+ * @file cmd.h
+ * @author Adrien Prost and Rodrigo Granja (you@domain.com)
+ * @brief contains functions necessary to handle everything relevant to commands between the server and the client
+ * @version 0.1
+ * @date 2019-05-05
+ * 
+ * @copyright Copyright (c) 2019
+ * 
+ */
+
 #include "grass.h"
 
 /**

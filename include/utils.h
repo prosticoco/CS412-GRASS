@@ -1,6 +1,16 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+/**
+ * @file utils.h
+ * @author Adrien Prost and Rodrigo Granja
+ * @brief contains many function prototypes which are used throughout the code
+ * @version 0.1
+ * @date 2019-05-05
+ * 
+ * @copyright Copyright (c) 2019
+ * 
+ */
 
 #include "grass.h"
 
@@ -68,17 +78,31 @@ void error_handler(int err,connection_t* curr_co);
 bool checkInvalidChars(char * in, size_t dict_size);
 
 /**
- * Debugging functions
+ * @brief prints all fields in the ftp metadata, only used for debugging
  * 
- * */
+ * @param ftp ftp data pointer
+ */
 void print_ftp_fields(ftp_data_t * ftp);
-void print_connection_fields(connection_t * c);
-
-
-int check_file_validity(char* path,connection_t * c);
 
 int check_pattern_validity(char * pattern);
 
+/**
+ * @brief prints all fields in the connection metadata, only used for debugging
+ * 
+ * @param c pointer to the connection metadata
+ */
+void print_connection_fields(connection_t * c);
 
+/**
+ * @brief checks that the path is valid and is pointing to a regular file
+ * if so, tests if this file can be opened without any problem
+ * if so,fetches the size of the file given in the path (used in get command)
+ * and updates the file size field in ftp metadata
+ * 
+ * @param path path to a file
+ * @param c metadata pointer
+ * @return int returns 0 upon success, negative error code if file was not found
+ */
+int check_file_validity(char* path,connection_t * c);
 
 #endif
