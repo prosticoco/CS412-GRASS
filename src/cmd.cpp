@@ -409,30 +409,14 @@ int cmd_put(connection_t* curr_co){
 
 int cmd_get(connection_t* curr_co){
     int error = 0;
-    size_t file_size;
     check_ftp(&(curr_co->ftp_data),SEND,true,false);
-    bzero(curr_co->ftp_data.filepath_send,MAX_ROOT_PATH + MAX_PATH_SIZE);
-    strncpy(curr_co->ftp_data.filepath_send,curr_co->pwd,MAX_ROOT_PATH + MAX_PATH_SIZE);
-    strcat(curr_co->ftp_data.filepath_send,"/");
-    strncat(curr_co->ftp_data.filepath_send,curr_co->curr_args[0],
-           (MAX_ROOT_PATH + MAX_PATH_SIZE) - strlen(curr_co->ftp_data.filepath_send));
-    struct stat path_stat;
-    stat(curr_co->ftp_data.filepath_send, &path_stat);
-    // check if file exists or not or is directory
-    if(!S_ISREG(path_stat.st_mode)){
-        printf("not a file : path [%s]\n",curr_co->ftp_data.filepath_send);
-        return ERROR_FILE_NOT_FOUND;
-    }
-    // open the file to seek the file size
-    FILE* file_to_send = fopen(curr_co->ftp_data.filepath_send,"rb");
-    if(file_to_send == NULL){
-        printf("fopen failed : path [%s]\n",curr_co->ftp_data.filepath_send);
-        // if pointer is null then probably file was not found
-        return ERROR_FILE_NOT_FOUND;
-    }
-    fseek(file_to_send, 0L, SEEK_END);
-    file_size = ftell(file_to_send);
-    fclose(file_to_send);
+    char * path = curr_co->ftp_data.filepath_send;
+    bzero(path,MAX_PATH_SIZE + MAX_ROOT_PATH);
+    strcpy(path,"root");
+    strcat(path,curr_co->relative_pwd);
+    strcat(path,"/");
+    strcat(path,curr_co->curr_args[0]);
+    check_file_validity(path,curr_co);
     // setup connection for ftp
     error = setup_ftp(curr_co);
     if(error){
@@ -443,11 +427,10 @@ int cmd_get(connection_t* curr_co){
     curr_co->ftp_data.sending = true;
     curr_co->ftp_data.ftp_user = FTP_SERVER;
     curr_co->ftp_data.main_socket = curr_co->connection_socket;
-    curr_co->ftp_data.file_size_send = file_size;
     // spawn ftp thread
     pthread_create(&(curr_co->ftp_data.send_id),NULL,ftp_thread_send,(void *) &(curr_co->ftp_data));
     // answer to client with port and size of file
-    sprintf(curr_co->curr_out,"get port:  %d size:  %zu",curr_co->ftp_data.ftp_port,file_size);
+    sprintf(curr_co->curr_out,"get port:  %d size:  %zu",curr_co->ftp_data.ftp_port,curr_co->ftp_data.file_size_send);
     return 0;
 }
 
@@ -520,4 +503,26 @@ int tokenize_path(char* path, char (*out)[MAX_FOLDER_NAME_SIZE]) {
     }
     printf("Tokenize succeed \n");
     return token_num;
+}
+
+
+int check_file_validity(char* path,connection_t* client){   
+    char file_path[MAX_PATH_SIZE];
+    strcpy(file_path,path);
+    struct stat path_stat;
+    stat(file_path, &path_stat);
+    // check if file exists or not or is directory
+    if(!S_ISREG(path_stat.st_mode)){
+        printf("not a file : path [%s]\n",path);
+        return ERROR_FILE_NOT_FOUND;
+    }
+    FILE * file = NULL;
+    file = fopen(file_path,"rb");
+    if(file == NULL){
+        return ERROR_FILE_NOT_FOUND;
+    }
+    fseek(file, 0L, SEEK_END);
+    client->ftp_data.file_size_send = ftell(file);
+    fclose(file);
+    return 0;
 }
