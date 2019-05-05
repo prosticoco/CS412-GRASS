@@ -144,5 +144,14 @@ int cmd_grep(connection_t* curr_co);
 
 int cmd_get(connection_t* curr_co);
 int cmd_put(connection_t* curr_co);
+/**
+ * @brief Custom compartor function that compares 2 strings alphabetically and is case-insensitive
+ * 
+ * @param a the first string
+ * @param b the second string
+ * @return true if they are equal, false otherwise
+ */
+bool iequals(const std::string& a, const std::string& b);
+
 
 #endif

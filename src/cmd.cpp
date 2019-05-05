@@ -59,7 +59,6 @@ int process_cmd(connection_t * curr_co){
     while(i < NUM_COMMANDS && !found) {
         if(strncmp(splitted_cmd[0], cmds[i].name, MAX_ARG_SIZE) == 0) {
             found = true;
-            //todo initialize data structure to pass to cmd function
             curr_co->curr_args = &splitted_cmd[1];
             // check if args have correct length
             if (num_tokens - 1 != cmds[i].num_params) {
@@ -141,15 +140,6 @@ int cmd_pass(connection_t * curr_co){
 
     curr_co->ready_for_check = false;
     return 0;
-}
-
-
-bool iequals(const std::string& a, const std::string& b) {
-    return std::equal(a.begin(), a.end(),
-                      b.begin(), b.end(),
-                      [](char a, char b) {
-                          return tolower(a) == tolower(b);
-                      });
 }
 
 int cmd_w(connection_t* curr_co) {
@@ -379,6 +369,7 @@ int cmd_rm(connection_t* curr_co) {
 }
 
 int cmd_put(connection_t* curr_co){
+    printf("[%s] : put ", curr_co->username);
     int error = 0;
     // if the client is currently using ftp
     check_ftp(&(curr_co->ftp_data),RECV,true,false);
@@ -393,9 +384,10 @@ int cmd_put(connection_t* curr_co){
     // setup connection for ftp
     error = setup_ftp(curr_co);
     if(error){
-        printf("Error : setup ftp connection failed \n");
+        printf("- FAIL \nERROR : setup ftp connection failed \n");
         return error;
     }
+    printf("%s\n", curr_co->curr_args[0]);
     // setup other ftp related fields
     curr_co->ftp_data.receiving = true;
     curr_co->ftp_data.ftp_user = FTP_SERVER;
@@ -408,6 +400,7 @@ int cmd_put(connection_t* curr_co){
 }
 
 int cmd_get(connection_t* curr_co){
+    printf("[%s] : get ", curr_co->username);
     int error = 0;
     size_t file_size;
     check_ftp(&(curr_co->ftp_data),SEND,true,false);
@@ -420,13 +413,13 @@ int cmd_get(connection_t* curr_co){
     stat(curr_co->ftp_data.filepath_send, &path_stat);
     // check if file exists or not or is directory
     if(!S_ISREG(path_stat.st_mode)){
-        printf("not a file : path [%s]\n",curr_co->ftp_data.filepath_send);
+        printf("- FAIL\nnot a file : path [%s]\n",curr_co->ftp_data.filepath_send);
         return ERROR_FILE_NOT_FOUND;
     }
     // open the file to seek the file size
     FILE* file_to_send = fopen(curr_co->ftp_data.filepath_send,"rb");
     if(file_to_send == NULL){
-        printf("fopen failed : path [%s]\n",curr_co->ftp_data.filepath_send);
+        printf("- FAIL\nfopen failed : path [%s]\n",curr_co->ftp_data.filepath_send);
         // if pointer is null then probably file was not found
         return ERROR_FILE_NOT_FOUND;
     }
@@ -436,9 +429,10 @@ int cmd_get(connection_t* curr_co){
     // setup connection for ftp
     error = setup_ftp(curr_co);
     if(error){
-        printf("Error : setup ftp connection failed \n");
+        printf("- FAIL\nERROR : setup ftp connection failed \n");
         return error;
     }
+    printf("%s\n", curr_co->curr_args[0]);
     // setup other ftp related fields
     curr_co->ftp_data.sending = true;
     curr_co->ftp_data.ftp_user = FTP_SERVER;
@@ -520,4 +514,12 @@ int tokenize_path(char* path, char (*out)[MAX_FOLDER_NAME_SIZE]) {
     }
     printf("Tokenize succeed \n");
     return token_num;
+}
+
+bool iequals(const std::string& a, const std::string& b) {
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
 }
