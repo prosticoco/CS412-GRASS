@@ -84,7 +84,6 @@ int check_dir(data_t* data) {
         char cmd[MAX_INPUT_SIZE]= "mkdir ";
         strcat(cmd, root_path);
         system(cmd);
-        //todo handle error
     }
 
     strncpy(data->root_path, root_path, MAX_INPUT_SIZE);
@@ -195,4 +194,90 @@ void print_ftp_fields(ftp_data_t * ftp){
     printf("port is open : %d \n",ftp->port_open);
     printf("sending : %d \n",ftp->sending);
     printf("receiving : %d \n",ftp->receiving);
+}
+
+int tokenize_cmd(char *in, char (*out)[MAX_ARG_SIZE] ){
+    int i = 0;
+    int token_num = 0;
+    char input[MAX_INPUT_SIZE];
+    strncpy(input,in,MAX_INPUT_SIZE);
+    char* token = strtok(input, " ");
+    while(token != NULL && i < MAX_TOKENS){
+        if(strlen(token) > MAX_ARG_SIZE){
+            return ERROR_ARGUMENT_SIZE;
+        }
+        token_num ++;
+        if(token[strlen(token)-1] == '\n'){
+            token[strlen(token)-1] = '\0';
+        }
+        strncpy(out[i],token,MAX_ARG_SIZE);
+        token = strtok(NULL," ");      
+        i += 1;
+    }
+    return token_num;
+}
+
+int tokenize_path(char* path, char (*out)[MAX_FOLDER_NAME_SIZE]) {
+    int i = 0;
+    int token_num = 0;
+    char input[MAX_INPUT_SIZE];
+    bzero(input, MAX_INPUT_SIZE);
+    strncpy(input,path,MAX_INPUT_SIZE);
+    char* token = strtok(input, "/");
+    while(token != NULL && i < MAX_TOKENS){
+        printf("Curr token : [%s]\n ", token);
+        if(strlen(token) > MAX_ARG_SIZE){
+            return ERROR_ARGUMENT_SIZE;
+        }
+        token_num ++;
+        strncpy(out[i],token,MAX_ARG_SIZE);
+        token = strtok(NULL,"/");      
+        i += 1;
+    }
+    printf("Tokenize succeed \n");
+    return token_num;
+}
+
+int check_file_validity(char* path,connection_t* client){   
+    char file_path[MAX_PATH_SIZE];
+    strcpy(file_path,path);
+    struct stat path_stat;
+    stat(file_path, &path_stat);
+    // check if file exists or not or is directory
+    if(!S_ISREG(path_stat.st_mode)){
+        printf("not a file : path [%s]\n",path);
+        return ERROR_FILE_NOT_FOUND;
+    }
+    FILE * file = NULL;
+    file = fopen(file_path,"rb");
+    if(file == NULL){
+        return ERROR_FILE_NOT_FOUND;
+    }
+    fseek(file, 0L, SEEK_END);
+    client->ftp_data.file_size_send = ftell(file);
+    fclose(file);
+    return 0;
+}
+
+int check_pattern_validity(char* out) {
+    char pattern[MAX_PATTERN_SIZE];
+    bzero(pattern, MAX_PATTERN_SIZE);
+    strcpy(pattern, out);
+    
+    //check for potential command injection
+    size_t dict_size = DICT_SIZE;
+    if(!checkInvalidChars(pattern, dict_size)) {
+        printf("- FAIL\n");
+        return ERROR_INVALID_CHARS;
+    }
+
+    return 0;
+}
+
+bool iequals(const std::string& a, const std::string& b) {
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
 }

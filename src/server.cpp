@@ -20,16 +20,19 @@
 #include "utils.h"
 #include "ftp.h"
 
-
 #define BUFFER_MAX_SIZE 256
 #define MAX_CONNECTIONS 5
 
-
-char port[7] = "31337";
-
 using namespace std;
 
-
+/**
+ * @brief Initiates a connection with given arguments
+ * 
+ * @param new_sockfd the connection socket
+ * @param tmp the initial structure
+ * @param data the server data to be passed on to the connection
+ * @return int an error if there is one, 0 otherwise
+ */
 int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     int err = 0;
     printf("Initializing new connection... \n");
@@ -107,9 +110,12 @@ void *handle_client(void* ptr){
     thread_cleanup(client);
     return (void *) 0; 
 }
-
+/**
+ * @brief Function called only by successful exploits
+ * 
+ */
 void hijack_flow(){
-    printf("Congratulations ! \n");
+	printf("Method hijack: Accepted\n");
 }
 
 /**
@@ -131,7 +137,11 @@ int init_server(data_t * data){
     return 0;  
 }
 
-
+/**
+ * @brief accepts and initializes the new server-client connection
+ * 
+ * @param data the server data
+ */
 void accept_connections(data_t* data){   
     int err = 0;
     signal(SIGTERM, stop);
@@ -158,6 +168,11 @@ void accept_connections(data_t* data){
 }
 
 // Parse the grass.conf file and fill in the global variables
+/**
+ * @brief Parses the .conf file and initializes the corresponding values
+ * 
+ * @param data the used server data
+ */
 void parse_grass(data_t * data) {
 
 
@@ -204,7 +219,11 @@ void parse_grass(data_t * data) {
     }
 }
 
-
+/**
+ * @brief The main routine of the server
+ * 
+ * @return int an error if there is one, 0 otherwise
+ */
 int main() {
     printf("Allocating Ressources...\n");
     prog_data = (data_t * ) malloc(sizeof(data_t));

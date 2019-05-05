@@ -84,8 +84,6 @@ bool checkInvalidChars(char * in, size_t dict_size);
  */
 void print_ftp_fields(ftp_data_t * ftp);
 
-int check_pattern_validity(char * pattern);
-
 /**
  * @brief prints all fields in the connection metadata, only used for debugging
  * 
@@ -104,5 +102,13 @@ void print_connection_fields(connection_t * c);
  * @return int returns 0 upon success, negative error code if file was not found
  */
 int check_file_validity(char* path,connection_t * c);
+
+/**
+ * @brief Checks if the pattern we wish to find is valid
+ * 
+ * @param pattern we wish to check
+ * @return int the error if there is one, 0 otherwise
+ */
+int check_pattern_validity(char * pattern);
 
 #endif
