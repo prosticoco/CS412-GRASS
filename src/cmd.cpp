@@ -10,6 +10,8 @@
 #include <algorithm>
 #define NUM_COMMANDS 15
 
+std::string dict("&|;$><\!`");
+
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
     {"pass",1,false,cmd_pass},
@@ -172,6 +174,12 @@ int cmd_ping(connection_t* curr_co) {
         return ERROR_ARGUMENT_SIZE;
     }
 
+    //check for potential command injection
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+        return ERROR_INVALID_CHARS;
+    }    
+
     printf("%s\n", curr_co->curr_args[0]);
 
     char cmd[MAX_INPUT_SIZE];
@@ -246,7 +254,9 @@ int cmd_mkdir(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    if(!checkInvalidChars(curr_co->curr_args[0])) {
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+        printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
 
@@ -282,6 +292,13 @@ int cmd_cd(connection_t* curr_co) {
     if(strlen(curr_co->curr_args[0]) > MAX_PATH_SIZE) {
         printf("- FAIL\n");
         return ERROR_MAX_PATH_SIZE;
+    }
+
+    //check for potential command injection
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, --dict_size)) {
+        printf("- FAIL\n");
+        return ERROR_INVALID_CHARS;
     }
 
     printf("%s\n", curr_co->curr_args[0]);
@@ -337,7 +354,8 @@ int cmd_rm(connection_t* curr_co) {
         return ERROR_PATH_NOT_SUPPORTED;
     } 
     //check for potential command injection
-    if(!checkInvalidChars(curr_co->curr_args[0])) {
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0],dict, dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -453,13 +471,15 @@ int cmd_grep(connection_t* curr_co) {
         return ERROR_ARGUMENT_SIZE;
     }
     //check for potential command injection
-    if(!checkInvalidChars(curr_co->curr_args[0])) {
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+        printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
 
     printf("%s\n", curr_co->curr_args[0]);
     char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
-    bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
+    bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZEsize_t dict_size = dict.size(); + MAX_MARGIN);
     sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);

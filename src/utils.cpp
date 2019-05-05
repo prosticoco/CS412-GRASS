@@ -113,10 +113,9 @@ void findAndReplaceAll(std::string & data, std::string toSearch, std::string rep
 	}
 }
 
-bool checkInvalidChars(char * in) {
+bool checkInvalidChars(char * in, std::string dict,size_t dict_size) {
     std::string toCheck(in);
-    std::string dict("&|;$><`\!");
-    for(size_t i = 0; i < dict.size(); i++) {
+    for(size_t i = 0; i < dict_size; i++) {
         if (toCheck.find(dict.at(i)) != std::string::npos) {
             // contains invalid char
             return false;
