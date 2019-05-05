@@ -469,6 +469,7 @@ int cmd_get(connection_t* curr_co){
 
 int cmd_grep(connection_t* curr_co) {
     printf("[%s] : grep ", curr_co->username);
+    char pattern[MAX_PATTERN_SIZE];
 
     if(strlen(curr_co->curr_args[0]) >= MAX_ARG_SIZE ) {
         printf("- FAIL\n");
@@ -482,7 +483,6 @@ int cmd_grep(connection_t* curr_co) {
         return ERROR_INVALID_CHARS;
     }
 
-    char pattern[MAX_PATTERN_SIZE];
     bzero(pattern, MAX_PATTERN_SIZE);
     strncpy(pattern, curr_co->curr_args[0], MAX_ARG_SIZE);
 
