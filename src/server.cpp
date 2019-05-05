@@ -44,6 +44,7 @@ int init_connection(int new_sockfd,connection_t* tmp, data_t* data){
     init_ftp_fields(&(tmp->ftp_data));
     int random = rand() % 1000;
     sprintf(tmp->username,"Unknown_user_%d",random);
+    sprintf(tmp->tmp_username, "Default");
     tmp->curr_in = NULL;
     tmp->curr_out = NULL;
     // initialise root directory

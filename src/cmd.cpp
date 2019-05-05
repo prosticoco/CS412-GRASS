@@ -94,8 +94,9 @@ int process_cmd(connection_t * curr_co){
 
 
 int cmd_login(connection_t* curr_co){
+    print_connection_fields(curr_co);
     printf("Login attempt\n");
-    if(strlen(curr_co->curr_args[0])>= MAX_USERNAME_SIZE) {
+    if(strlen(curr_co->curr_args[0]) > MAX_USERNAME_SIZE) {
         return ERROR_USERNAME_SIZE;
     }
     curr_co->ready_for_check = true;
@@ -105,6 +106,9 @@ int cmd_login(connection_t* curr_co){
 }
 
 int cmd_pass(connection_t * curr_co){
+    printf("%d\n", sizeof(bool));
+    print_connection_fields(curr_co);
+    printf("size of username : %d\n", strlen(curr_co->tmp_username));
     if(strlen(curr_co->curr_args[0]) >= MAX_PASSWORD_SIZE) {
         return ERROR_PASSWORD_SIZE;
     }
@@ -230,8 +234,10 @@ int cmd_exit(connection_t* curr_co) {
 
 int cmd_ls(connection_t* curr_co) {
     printf("[%s] : ls\n", curr_co->username);
-    char cmd[MAX_INPUT_SIZE] = "ls -l ";
-    strncat(cmd, curr_co->pwd, MAX_PATH_SIZE);
+    char cmd[MAX_PATH_SIZE + MAX_ROOT_PATH + 20];
+    bzero(cmd, MAX_PATH_SIZE + MAX_ROOT_PATH + 20);
+    strcpy(cmd, "ls -l ");
+    strncat(cmd, curr_co->pwd, MAX_PATH_SIZE + MAX_ROOT_PATH);
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
     
@@ -307,10 +313,10 @@ int cmd_cd(connection_t* curr_co) {
 
     printf("%s\n", curr_co->curr_args[0]);
 
-    char cd[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE + 15];
-    bzero(cd, MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE + 15);
-    char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE];
-    bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE);
+    char cd[MAX_PATH_SIZE + MAX_ROOT_PATH + 15];
+    bzero(cd, MAX_PATH_SIZE + MAX_ROOT_PATH + 15);
+    char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH];
+    bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH);
     char out[MAX_OUTPUT_SIZE];
     bzero(out, MAX_OUTPUT_SIZE);
     
@@ -319,6 +325,13 @@ int cmd_cd(connection_t* curr_co) {
     } else {
         sprintf(new_path, "%s/%s", curr_co->root, curr_co->curr_args[0]);
     }
+
+    //check that relative path from root directory is less than 128
+    if((strlen(curr_co->pwd) + strlen(curr_co->curr_args[0]) - strlen(curr_co->root)) >= MAX_PATH_SIZE ) {
+        printf("- FAIL\n");
+        return ERROR_MAX_PATH_SIZE;
+    }
+
     sprintf(cd, "cd %s && pwd", new_path);
     execute_system_cmd(cd,out);
     

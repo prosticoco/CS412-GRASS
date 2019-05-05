@@ -180,6 +180,7 @@ void print_connection_fields(connection_t * c){
     printf("main thread : [%lu] \n",c->tid);
     printf("connection socket : %d \n",c->connection_socket);
     printf("username : %s \n",c->username);
+    printf("tmp username : [%s]\n",c->tmp_username);
     printf("autenticated : %d\n",c->auth);
     printf("pwd : [%s]\n",c->pwd);
     print_ftp_fields(&(c->ftp_data));
