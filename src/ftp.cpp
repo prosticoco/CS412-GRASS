@@ -17,9 +17,6 @@
 #include "utils.h"
 #include "grass.h"
 
-
-
-
 void init_ftp_fields(ftp_data_t* ftp){
     bzero(ftp,sizeof(ftp_data_t));
     ftp->port_open = false;
