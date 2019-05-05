@@ -467,30 +467,19 @@ int cmd_get(connection_t* curr_co){
 
 int cmd_grep(connection_t* curr_co) {
     printf("[%s] : grep ", curr_co->username);
-    char pattern[MAX_PATTERN_SIZE];
-    bzero(pattern, MAX_PATTERN_SIZE);
 
-    if(strlen(curr_co->curr_args[0]) >= MAX_ARG_SIZE ) {
+    int err = check_pattern_validity(curr_co->curr_args[0]);
+    if(err) {
         printf("- FAIL\n");
-        return ERROR_ARGUMENT_SIZE;
-    }
-        
-    //check for potential command injection
-    size_t dict_size = DICT_SIZE;
-    if(!checkInvalidChars(curr_co->curr_args[0], dict_size)) {
-        printf("- FAIL\n");
-        return ERROR_INVALID_CHARS;
-    }
-
-    strncpy(pattern, curr_co->curr_args[0], MAX_ARG_SIZE);
-
-    printf("%s\n", pattern);
+        return err;
+    } 
+    printf("%s\n", curr_co->curr_args[0]);
     char cmd[MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN];
     bzero (cmd, MAX_ARG_SIZE + MAX_ROOT_PATH + MAX_PATH_SIZE + MAX_MARGIN);
-    sprintf(cmd, "grep %s %s -rl",pattern , curr_co->pwd);
+    sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0] , curr_co->pwd);
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);
-    int err = execute_system_cmd(cmd,out);
+    err = execute_system_cmd(cmd,out);
     if(strlen(out) > 0) {
         std::string tmp(out);
         findAndReplaceAll(tmp,curr_co->root,"");
@@ -561,6 +550,21 @@ int check_file_validity(char* path,connection_t* client){
     fseek(file, 0L, SEEK_END);
     client->ftp_data.file_size_send = ftell(file);
     fclose(file);
+    return 0;
+}
+
+int check_pattern_validity(char* out) {
+    char pattern[MAX_PATTERN_SIZE];
+    bzero(pattern, MAX_PATTERN_SIZE);
+    strcpy(pattern, out);
+    
+    //check for potential command injection
+    size_t dict_size = DICT_SIZE;
+    if(!checkInvalidChars(pattern, dict_size)) {
+        printf("- FAIL\n");
+        return ERROR_INVALID_CHARS;
+    }
+
     return 0;
 }
 
