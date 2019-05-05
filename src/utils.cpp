@@ -29,7 +29,7 @@ void remove_connection(data_t * data,connection_t * connection){
     pthread_mutex_unlock(&(data->vector_protect));
 }
 
-int execute_system_cmd(const char *cmd,char* output,size_t size){
+int execute_system_cmd(const char *cmd,char* output){
     if(cmd == NULL || output == NULL){
         printf("Error NULL argument in execute_system_cmd \n");
         return ERROR_NULL;
@@ -45,12 +45,9 @@ int execute_system_cmd(const char *cmd,char* output,size_t size){
         printf("Error popen on command : [%s] \n",cmd);
         return ERROR_IO;
     }
-    char tmp[MAX_OUTPUT_SIZE];
-    bzero(tmp,MAX_OUTPUT_SIZE);
     size_t total = 0;
-    total = fread(tmp,1,MAX_OUTPUT_SIZE-1,out);
+    total = fread(output,1,MAX_OUTPUT_SIZE-1,out);
     output[total] = '\0';
-    sprintf(output,tmp);
     if(output[strlen(output)-1] == '\n'){
         output[strlen(output)-1] = '\0';
     }

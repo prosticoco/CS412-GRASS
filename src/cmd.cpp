@@ -189,7 +189,7 @@ int cmd_ping(connection_t* curr_co) {
     sprintf(cmd, "ping %s -c 1", curr_co->curr_args[0]);
     char out[MAX_INPUT_SIZE];
     bzero(out,MAX_INPUT_SIZE);
-    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    int err = execute_system_cmd(cmd, out);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
 
     return err;
@@ -199,7 +199,7 @@ int cmd_date(connection_t* curr_co) {
     printf("[%s] : date\n", curr_co->username);
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
-    int err = execute_system_cmd("date", out, MAX_INPUT_SIZE);
+    int err = execute_system_cmd("date", out);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
     return err;
 }
@@ -237,7 +237,7 @@ int cmd_ls(connection_t* curr_co) {
     char out[MAX_INPUT_SIZE];
     bzero(out, MAX_INPUT_SIZE);
     
-    int err = execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    int err = execute_system_cmd(cmd, out);
     strncpy(curr_co->curr_out, out, MAX_INPUT_SIZE);
     return err;
 }
@@ -309,7 +309,7 @@ int cmd_cd(connection_t* curr_co) {
         sprintf(new_path, "%s/%s", curr_co->root, curr_co->curr_args[0]);
     }
     sprintf(cd, "cd %s && pwd", new_path);
-    execute_system_cmd(cd,out, MAX_OUTPUT_SIZE);
+    execute_system_cmd(cd,out);
     
     if(strlen(out) == 0) {
         printf("- FAIL\n");
@@ -366,7 +366,7 @@ int cmd_rm(connection_t* curr_co) {
     strncat(cmd, curr_co->curr_args[0], MAX_FOLDER_NAME_SIZE);
     char out[MAX_OUTPUT_SIZE];
     bzero(out, MAX_OUTPUT_SIZE);
-    execute_system_cmd(cmd, out, MAX_INPUT_SIZE);
+    execute_system_cmd(cmd, out);
     if(strlen(out) > 0) {
         //failure
         strcpy(curr_co->curr_out, "Command rm failed");
@@ -469,7 +469,7 @@ int cmd_grep(connection_t* curr_co) {
     sprintf(cmd, "grep %s %s -rl",curr_co->curr_args[0], curr_co->pwd);
     char out[4*MAX_OUTPUT_SIZE];
     bzero(out, 4*MAX_OUTPUT_SIZE);
-    int err = execute_system_cmd(cmd,out,4*MAX_OUTPUT_SIZE);
+    int err = execute_system_cmd(cmd,out);
     if(strlen(out) > 0) {
         std::string tmp(out);
         findAndReplaceAll(tmp,curr_co->root,"");

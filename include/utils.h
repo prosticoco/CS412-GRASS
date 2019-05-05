@@ -32,7 +32,7 @@ void remove_connection(data_t * data, connection_t * connection);
  * @param size the maximum size the command can have
  * @return int returns negative value upon error and 0 if successfull
  */
-int execute_system_cmd(const char *cmd,char* output,size_t size);
+int execute_system_cmd(const char *cmd,char* output);
 
 /**
  * @brief checks if root directory is present, if it is we reset it, if it is not we create it
