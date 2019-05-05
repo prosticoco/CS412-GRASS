@@ -10,8 +10,6 @@
 #include <algorithm>
 #define NUM_COMMANDS 15
 
-std::string dict("&|;$><\!`");
-
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
     {"pass",1,false,cmd_pass},
@@ -175,8 +173,8 @@ int cmd_ping(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    size_t dict_size = dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+    size_t dict_size = curr_co->server_data->dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, dict_size)) {
         return ERROR_INVALID_CHARS;
     }    
 
@@ -256,8 +254,8 @@ int cmd_mkdir(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    size_t dict_size = dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+    size_t dict_size = curr_co->server_data->dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -302,8 +300,8 @@ int cmd_cd(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    size_t dict_size = dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], dict, --dict_size)) {
+    size_t dict_size = curr_co->server_data->dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, --dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -369,8 +367,8 @@ int cmd_rm(connection_t* curr_co) {
         return ERROR_PATH_NOT_SUPPORTED;
     } 
     //check for potential command injection
-    size_t dict_size = dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0],dict, dict_size)) {
+    size_t dict_size = curr_co->server_data->dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0],curr_co->server_data->dict, dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -470,6 +468,7 @@ int cmd_get(connection_t* curr_co){
 int cmd_grep(connection_t* curr_co) {
     printf("[%s] : grep ", curr_co->username);
     char pattern[MAX_PATTERN_SIZE];
+    bzero(pattern, MAX_PATTERN_SIZE);
 
     if(strlen(curr_co->curr_args[0]) >= MAX_ARG_SIZE ) {
         printf("- FAIL\n");
@@ -477,13 +476,12 @@ int cmd_grep(connection_t* curr_co) {
     }
         
     //check for potential command injection
-    size_t dict_size = dict.size();
-    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+    size_t dict_size = curr_co->server_data->dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], curr_co->server_data->dict, dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
 
-    bzero(pattern, MAX_PATTERN_SIZE);
     strncpy(pattern, curr_co->curr_args[0], MAX_ARG_SIZE);
 
     printf("%s\n", pattern);
