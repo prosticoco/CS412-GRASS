@@ -10,6 +10,8 @@
 #include <algorithm>
 #define NUM_COMMANDS 15
 
+std::string dict("&|;$><\!`");
+
 command_t cmds[NUM_COMMANDS] = {
     {"login",1,false,cmd_login},
     {"pass",1,false,cmd_pass},
@@ -59,7 +61,6 @@ int process_cmd(connection_t * curr_co){
     while(i < NUM_COMMANDS && !found) {
         if(strncmp(splitted_cmd[0], cmds[i].name, MAX_ARG_SIZE) == 0) {
             found = true;
-            //todo initialize data structure to pass to cmd function
             curr_co->curr_args = &splitted_cmd[1];
             // check if args have correct length
             if (num_tokens - 1 != cmds[i].num_params) {
@@ -143,15 +144,6 @@ int cmd_pass(connection_t * curr_co){
     return 0;
 }
 
-
-bool iequals(const std::string& a, const std::string& b) {
-    return std::equal(a.begin(), a.end(),
-                      b.begin(), b.end(),
-                      [](char a, char b) {
-                          return tolower(a) == tolower(b);
-                      });
-}
-
 int cmd_w(connection_t* curr_co) {
     printf("[%s] : w\n", curr_co->username);
     // there is always at least one user authentified
@@ -181,6 +173,12 @@ int cmd_ping(connection_t* curr_co) {
         printf("- FAIL");
         return ERROR_ARGUMENT_SIZE;
     }
+
+    //check for potential command injection
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+        return ERROR_INVALID_CHARS;
+    }    
 
     printf("%s\n", curr_co->curr_args[0]);
 
@@ -256,26 +254,32 @@ int cmd_mkdir(connection_t* curr_co) {
     }
 
     //check for potential command injection
-    if(!checkInvalidChars(curr_co->curr_args[0])) {
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+        printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
 
+    //check if folder name is valid
     if(strlen(curr_co->curr_args[0]) >= MAX_FOLDER_NAME_SIZE) {
         printf("- FAIL\n");
         return ERROR_FOLDER_NAME_SIZE;
     }
-    printf("%s\n", curr_co->curr_args[0]);
+    
+    //check that relative path from root directory is less than 128
+    if((strlen(curr_co->pwd) + strlen(curr_co->curr_args[0]) - strlen(curr_co->root)) >= MAX_PATH_SIZE ) {
+        printf("- FAIL\n");
+        return ERROR_MAX_PATH_SIZE;
+    }
 
-    char cmd[MAX_INPUT_SIZE] = "mkdir ";
-    char dir_path[MAX_PATH_SIZE];
-    bzero(dir_path, MAX_PATH_SIZE);
-    strncat(dir_path, curr_co->pwd, MAX_PATH_SIZE);    
+    char dir_path[MAX_PATH_SIZE + MAX_ROOT_PATH];
+    bzero(dir_path, MAX_PATH_SIZE + MAX_ROOT_PATH);
+    strncat(dir_path, curr_co->pwd, MAX_PATH_SIZE + MAX_ROOT_PATH);    
     strcat(dir_path, "/" );
-    strncat(dir_path, curr_co->curr_args[0], MAX_PATH_SIZE);
-    strcat(cmd, dir_path);
+    strncat(dir_path, curr_co->curr_args[0], MAX_FOLDER_NAME_SIZE);
 
-    char out[MAX_INPUT_SIZE];
-    bzero(out,MAX_INPUT_SIZE);
+    char out[MAX_OUTPUT_SIZE];
+    bzero(out,MAX_OUTPUT_SIZE);
     int err = mkdir(dir_path, ACCESSPERMS);
     if (err) {
         //fail
@@ -294,10 +298,17 @@ int cmd_cd(connection_t* curr_co) {
         return ERROR_MAX_PATH_SIZE;
     }
 
+    //check for potential command injection
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, --dict_size)) {
+        printf("- FAIL\n");
+        return ERROR_INVALID_CHARS;
+    }
+
     printf("%s\n", curr_co->curr_args[0]);
 
-    char cd[MAX_PATH_SIZE];
-    bzero(cd, MAX_PATH_SIZE);
+    char cd[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE + 15];
+    bzero(cd, MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE + 15);
     char new_path[MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE];
     bzero(new_path, MAX_PATH_SIZE + MAX_ROOT_PATH + MAX_ARG_SIZE);
     char out[MAX_OUTPUT_SIZE];
@@ -347,7 +358,8 @@ int cmd_rm(connection_t* curr_co) {
         return ERROR_PATH_NOT_SUPPORTED;
     } 
     //check for potential command injection
-    if(!checkInvalidChars(curr_co->curr_args[0])) {
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0],dict, dict_size)) {
         printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
@@ -379,6 +391,7 @@ int cmd_rm(connection_t* curr_co) {
 }
 
 int cmd_put(connection_t* curr_co){
+    printf("[%s] : put ", curr_co->username);
     int error = 0;
     // if the client is currently using ftp
     check_ftp(&(curr_co->ftp_data),RECV,true,false);
@@ -393,9 +406,10 @@ int cmd_put(connection_t* curr_co){
     // setup connection for ftp
     error = setup_ftp(curr_co);
     if(error){
-        printf("Error : setup ftp connection failed \n");
+        printf("- FAIL \nERROR : setup ftp connection failed \n");
         return error;
     }
+    printf("%s\n", curr_co->curr_args[0]);
     // setup other ftp related fields
     curr_co->ftp_data.receiving = true;
     curr_co->ftp_data.ftp_user = FTP_SERVER;
@@ -408,6 +422,7 @@ int cmd_put(connection_t* curr_co){
 }
 
 int cmd_get(connection_t* curr_co){
+    printf("[%s] : get ", curr_co->username);
     int error = 0;
     check_ftp(&(curr_co->ftp_data),SEND,true,false);
     char * path = curr_co->ftp_data.filepath_send;
@@ -420,9 +435,10 @@ int cmd_get(connection_t* curr_co){
     // setup connection for ftp
     error = setup_ftp(curr_co);
     if(error){
-        printf("Error : setup ftp connection failed \n");
+        printf("- FAIL\nERROR : setup ftp connection failed \n");
         return error;
     }
+    printf("%s\n", curr_co->curr_args[0]);
     // setup other ftp related fields
     curr_co->ftp_data.sending = true;
     curr_co->ftp_data.ftp_user = FTP_SERVER;
@@ -442,7 +458,9 @@ int cmd_grep(connection_t* curr_co) {
         return ERROR_ARGUMENT_SIZE;
     }
     //check for potential command injection
-    if(!checkInvalidChars(curr_co->curr_args[0])) {
+    size_t dict_size = dict.size();
+    if(!checkInvalidChars(curr_co->curr_args[0], dict, dict_size)) {
+        printf("- FAIL\n");
         return ERROR_INVALID_CHARS;
     }
 
@@ -525,4 +543,12 @@ int check_file_validity(char* path,connection_t* client){
     client->ftp_data.file_size_send = ftell(file);
     fclose(file);
     return 0;
+}
+
+bool iequals(const std::string& a, const std::string& b) {
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
 }

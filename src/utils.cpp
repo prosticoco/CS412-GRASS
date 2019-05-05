@@ -113,10 +113,9 @@ void findAndReplaceAll(std::string & data, std::string toSearch, std::string rep
 	}
 }
 
-bool checkInvalidChars(char * in) {
+bool checkInvalidChars(char * in, std::string dict,size_t dict_size) {
     std::string toCheck(in);
-    std::string dict("&|;$><`\!");
-    for(size_t i = 0; i < dict.size(); i++) {
+    for(size_t i = 0; i < dict_size; i++) {
         if (toCheck.find(dict.at(i)) != std::string::npos) {
             // contains invalid char
             return false;
@@ -167,6 +166,10 @@ void error_handler(int err,connection_t* client){
         case ERROR_PATH_NOT_SUPPORTED:
             printf("ERROR : command does not support paths\n");
             strcpy(client->curr_out,"ERROR : command does not support paths");
+            break;
+        case ERROR_MAX_PATH_SIZE:
+            printf("ERROR : command does not support paths longer than 128\n");
+            strcpy(client->curr_out,"ERROR : command does not support paths longer than 128");
             break;
         default :
             printf("ERROR : default error in command processing\n");
