@@ -60,7 +60,6 @@ int check_dir(data_t* data) {
     char root_path[MAX_PATH_SIZE];
     int err = 0;
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working dir: %s\n", cwd);
         strncpy(root_path, cwd, MAX_PATH_SIZE);
         if(strcmp(data->base_dir.c_str(), ".") != 0) {
             strcat(root_path, "/");
@@ -72,20 +71,15 @@ int check_dir(data_t* data) {
     strncat(root_path, ROOT_DIR_NAME, MAX_PATH_SIZE);
 
     DIR* dir = opendir(root_path);
-    printf("Root path : %s\n", root_path);
     
     if (dir) {
         /* Directory exists. */
         closedir(dir);
-        printf("Root dir exists and is being reset\n");
         char cmd[MAX_INPUT] = "rm -r ";
         strcat(cmd, root_path);
         strcat(cmd, "/*");
         
         err = system(cmd);
-        if(err) {
-            printf("Root reset failed\n");
-        }
     } else {
         char cmd[MAX_INPUT_SIZE]= "mkdir ";
         strcat(cmd, root_path);

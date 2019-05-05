@@ -84,6 +84,7 @@ bool checkInvalidChars(char * in, size_t dict_size);
  */
 void print_ftp_fields(ftp_data_t * ftp);
 
+int check_pattern_validity(char * pattern);
 
 /**
  * @brief prints all fields in the connection metadata, only used for debugging

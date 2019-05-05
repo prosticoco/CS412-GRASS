@@ -162,8 +162,8 @@ void *ftp_thread_recv(void* ptr){
     int error = 0;
     int fd;
     ftp_data_t * ftp = (ftp_data_t *) ptr;
-    int type = RECV; 
-    printf("path : [%s]\n",ftp->filepath_recv); 
+    int type = RECV;        
+    ftp_connect(ftp,type);
     ftp->ftp_file_recv = fopen(ftp->filepath_recv,"wb");
     if(ftp->ftp_file_recv == NULL){
         printf("Error opening file, thread exiting \n");
@@ -173,8 +173,7 @@ void *ftp_thread_recv(void* ptr){
     if(fd < 0){
         printf("Error getting the file descriptor \n");    
         check_ftp(ftp,type,false,true);
-    }    
-    ftp_connect(ftp,type);
+    }
     do_ftp(ftp,fd,type);
     check_ftp(ftp,type,false,true);
 } 
@@ -184,8 +183,8 @@ void *ftp_thread_send(void* ptr){
     int error = 0;
     int fd;
     ftp_data_t * ftp = (ftp_data_t *) ptr;
-    int type = SEND; 
-    printf("path : [%s]\n",ftp->filepath_send);
+    int type = SEND;    
+    ftp_connect(ftp,type); 
     ftp->ftp_file_send = fopen(ftp->filepath_send,"rb");
     if(ftp->ftp_file_send == NULL){
         printf("Error opening file, thread exiting \n");
@@ -196,7 +195,6 @@ void *ftp_thread_send(void* ptr){
         printf("Error getting the file descriptor \n");    
         check_ftp(ftp,type,false,true);
     }
-    ftp_connect(ftp,type); 
     do_ftp(ftp,fd,type);
     check_ftp(ftp,type,false,true);
 }
@@ -283,7 +281,6 @@ int setup_server_co(int * portno,int * sock,bool random_port,unsigned int max_co
         return ERROR_NETWORK;
     }
     *portno = ntohs(serv_addr.sin_port);
-    printf("Port number is : %d \n",*portno);
     return 0;
 }
 

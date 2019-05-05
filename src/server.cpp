@@ -127,8 +127,6 @@ int init_server(data_t * data){
         return error;
     }
     data->main_socket = sockfd;
-    printf("init\n");
-    printf("done\n");
     check_dir(data);
     return 0;  
 }

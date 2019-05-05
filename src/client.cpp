@@ -179,7 +179,6 @@ int init(client_t* client,char** argv) {
     int sock = -1;
     memset(&client_data,0,sizeof(client_t));
     if (getcwd(client->cwd,MAX_ROOT_PATH)  != NULL) {
-        printf("[%s]\n",client->cwd);
     }
     //initialise connection
     client->portno = atoi(argv[2]);
