@@ -72,11 +72,10 @@ void error_handler(int err,connection_t* curr_co);
  * @brief Checks the given string for invalid characters
  * 
  * @param in the string to be checked
- * @param dict containing the invalid chars
  * @param dict_size the size of the dictionnary
  * @return true if the string does not contain invalid chars, false otherwise 
  * */
-bool checkInvalidChars(char * in, std::string dict,size_t dict_size);
+bool checkInvalidChars(char * in, size_t dict_size);
 
 /**
  * @brief prints all fields in the ftp metadata, only used for debugging
